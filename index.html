@@ -119,16 +119,31 @@
     }
   } catch(e) {}
 
-  // Four Color USA completion badge
-  if (localStorage.getItem('fourColorUSA_completed') === 'true') {
+  // Four Color USA progress / completion badge
+  (function() {
     var fcUSACard = document.querySelector('.four-color-usa');
-    if (fcUSACard) {
-      var fcUSABadge = document.createElement('span');
-      fcUSABadge.className = 'card-badge trophy-gold';
-      fcUSABadge.innerHTML = trophySvg('#f59e0b') + 'Complete!';
-      fcUSACard.appendChild(fcUSABadge);
+    if (!fcUSACard) return;
+
+    if (localStorage.getItem('fourColorUSA_completed') === 'true') {
+      var badge = document.createElement('span');
+      badge.className = 'card-badge trophy-gold';
+      badge.innerHTML = trophySvg('#f59e0b') + 'Complete!';
+      fcUSACard.appendChild(badge);
+    } else {
+      try {
+        var saved = JSON.parse(localStorage.getItem('fourColorUSA_stateColors'));
+        if (saved && typeof saved === 'object') {
+          var count = Object.keys(saved).length;
+          if (count > 0) {
+            var badge = document.createElement('span');
+            badge.className = 'card-badge high-score';
+            badge.textContent = count + '/50 states';
+            fcUSACard.appendChild(badge);
+          }
+        }
+      } catch(e) {}
     }
-  }
+  })();
 </script>
 </body>
 </html>

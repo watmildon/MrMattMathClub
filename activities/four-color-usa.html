@@ -478,6 +478,11 @@
   }
 
   function zoomAt(cx, cy, factor) {
+    // Bail out if already at the zoom limit in the requested direction
+    var minW = BASE_VB.w / MAX_ZOOM;
+    if (factor > 1 && vb.w <= minW) return;   // already at max zoom-in
+    if (factor < 1 && vb.w >= BASE_VB.w) return; // already at max zoom-out
+
     // cx, cy in SVG coords — zoom centered on that point
     var newW = vb.w / factor;
     var newH = vb.h / factor;
@@ -573,6 +578,10 @@
         if (dist && startDist) {
           var factor = dist / startDist;
           var newW = startVBW / factor;
+          // Clamp width before computing position to avoid jumps at limits
+          var minW = BASE_VB.w / MAX_ZOOM;
+          if (newW < minW) newW = minW;
+          if (newW > BASE_VB.w) newW = BASE_VB.w;
           var newH = newW * (BASE_VB.h / BASE_VB.w);
           vb.w = newW;
           vb.h = newH;
