@@ -51,6 +51,11 @@
       color: #7c3aed;
     }
 
+    .score-bar .high-score-value {
+      font-weight: 700;
+      color: #f59e0b;
+    }
+
     /* ---- Number bubble ---- */
     .number-bubble {
       width: 140px;
@@ -229,6 +234,7 @@
       <div class="game-card" onclick="dismissCorrect()">
         <div class="score-bar">
           <span>Round: <span class="round-value" id="round">1</span></span>
+          <span>Best: <span class="high-score-value" id="high-score">0</span></span>
           <span>Score: <span class="score-value" id="score">0</span></span>
         </div>
 
@@ -265,11 +271,13 @@
   let currentNumber = 0;
   let awaitingNext = false;
   let advanceTimer = null;
+  let highScore = parseInt(localStorage.getItem("sharingNumbers_highScore")) || 0;
 
   const gameCard = document.querySelector(".game-card");
   const numberBubble = document.getElementById("number-bubble");
   const scoreEl = document.getElementById("score");
   const roundEl = document.getElementById("round");
+  const highScoreEl = document.getElementById("high-score");
   const choicesEl = document.getElementById("choices");
   const feedbackCorrect = document.getElementById("feedback-correct");
   const correctMsg = document.getElementById("correct-msg");
@@ -303,7 +311,11 @@
 
   function pickNumber() {
     const { min, max } = getRange();
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    let n;
+    do {
+      n = Math.floor(Math.random() * (max - min + 1)) + min;
+    } while (n === currentNumber);
+    return n;
   }
 
   function nextRound() {
@@ -350,9 +362,9 @@
 
       if (composite) {
         const [a, b] = getFactorPair(currentNumber);
-        correctMsg.textContent = `Yes! ${currentNumber} can be shared — ${a} pieces each for ${b} people!`;
+        correctMsg.textContent = `Yes! ${a} pieces each for ${b} people!`;
       } else {
-        correctMsg.textContent = `Correct! ${currentNumber} is not sharable — it's prime!`;
+        correctMsg.textContent = `Correct! It's not sharable!`;
       }
 
       feedbackCorrect.classList.add("visible");
@@ -373,14 +385,21 @@
         const [a, b] = getFactorPair(currentNumber);
         wrongLabel.textContent = "Not quite!";
         explanationEl.textContent =
-          `${currentNumber} is sharable! It can be split into ${a} pieces each for ${b} people.`;
+          `It is sharable! ${a} pieces each for ${b} people.`;
       } else {
         wrongLabel.textContent = "Not quite!";
         explanationEl.textContent =
-          `${currentNumber} is not sharable — no way to split it into equal groups. It's prime!`;
+          `It is not sharable — no way to split it into equal groups.`;
       }
 
-      finalScoreEl.textContent = `You scored ${score} point${score !== 1 ? "s" : ""}!`;
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("sharingNumbers_highScore", highScore);
+        highScoreEl.textContent = highScore;
+        finalScoreEl.textContent = `New best: ${score} point${score !== 1 ? "s" : ""}!`;
+      } else {
+        finalScoreEl.textContent = `You scored ${score} point${score !== 1 ? "s" : ""}!`;
+      }
       feedbackWrong.classList.add("visible");
     }
   }
@@ -401,6 +420,7 @@
   }
 
   // Start
+  highScoreEl.textContent = highScore;
   nextRound();
 </script>
 </body>
