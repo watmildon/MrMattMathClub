@@ -55,6 +55,12 @@
         <p>Color maps so no two neighbors share the same color.</p>
       </a>
 
+      <a href="activities/four-color-usa.html" class="card four-color-usa">
+        <span class="icon">&#x1F5FA;</span>
+        <h2>Four Color USA</h2>
+        <p>Color all 50 states so no neighbors match!</p>
+      </a>
+
       <a href="activities/number-bonds.html" class="card number-bonds">
         <span class="icon">&#x1F517;</span>
         <h2>Number Bonds</h2>
@@ -112,6 +118,17 @@
       renderFourColoringBadge(fc.every(function(v) { return v === 2; }) ? 'gold' : 'silver');
     }
   } catch(e) {}
+
+  // Four Color USA completion badge
+  if (localStorage.getItem('fourColorUSA_completed') === 'true') {
+    var fcUSACard = document.querySelector('.four-color-usa');
+    if (fcUSACard) {
+      var fcUSABadge = document.createElement('span');
+      fcUSABadge.className = 'card-badge trophy-gold';
+      fcUSABadge.innerHTML = trophySvg('#f59e0b') + 'Complete!';
+      fcUSACard.appendChild(fcUSABadge);
+    }
+  }
 </script>
 </body>
 </html>
