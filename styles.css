@@ -32,27 +32,6 @@ header p {
   opacity: 0.9;
 }
 
-/* ---- Navigation ---- */
-
-nav {
-  background: #3b3f5c;
-  padding: 0.6rem 1rem;
-  text-align: center;
-}
-
-nav a {
-  color: #cbd5e0;
-  text-decoration: none;
-  margin: 0 1rem;
-  font-size: 1rem;
-  transition: color 0.2s;
-}
-
-nav a:hover,
-nav a.active {
-  color: #ffffff;
-}
-
 /* ---- Main Content ---- */
 
 main {
@@ -137,18 +116,39 @@ main {
   margin-bottom: 1rem;
 }
 
-/* ---- Back Link ---- */
+/* ---- Activity Title ---- */
 
-.back-link {
-  display: inline-block;
+.activity-title {
+  text-align: center;
+  font-size: 1.6rem;
+  color: #7c3aed;
   margin-bottom: 1rem;
-  color: #4c6ef5;
-  text-decoration: none;
-  font-weight: 500;
 }
 
-.back-link:hover {
-  text-decoration: underline;
+/* ---- Back Button ---- */
+
+.back-row {
+  max-width: 520px;
+  margin: 0 auto 0.75rem;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: white;
+  color: #4c6ef5;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
 }
 
 /* ---- Footer ---- */

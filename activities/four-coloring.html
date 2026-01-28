@@ -201,33 +201,59 @@
       margin-bottom: 1rem;
       font-style: italic;
     }
+
+    /* ---- Progress tracker ---- */
+    .progress-tracker {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      margin-top: 1.25rem;
+    }
+
+    .progress-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2.5px solid #cbd5e1;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      font-size: 0;
+    }
+
+    .progress-dot.current {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+    }
+
+    .progress-dot.completed {
+      border-color: #94a3b8;
+      background: #94a3b8;
+    }
+
+    .progress-dot.star {
+      border-color: #f59e0b;
+      background: #fef3c7;
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>Math Club</h1>
-    <p>Four Coloring</p>
   </header>
 
-  <nav>
-    <a href="../index.html">Home</a>
-    <a href="sharing-numbers.html">Sharing Numbers</a>
-    <a href="cake-cutting.html">Cake Cutting</a>
-    <a href="four-coloring.html" class="active">Four Coloring</a>
-    <a href="number-bonds.html">Number Bonds</a>
-  </nav>
-
   <main>
-    <a href="../index.html" class="back-link">&larr; Back to Activities</a>
+    <div class="back-row">
+      <a href="../index.html" class="back-btn" aria-label="Back to Activities"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10H5M5 10l5-5M5 10l5 5"/></svg></a>
+    </div>
 
     <div class="game-wrapper">
       <div class="game-card">
-        <div class="card-indicator">
-          Card <span id="card-num">1</span> of <span id="card-total">15</span>
-        </div>
+        <h2 class="activity-title">Four Coloring</h2>
 
         <p class="instruction">Color each section &mdash; no matching neighbors!</p>
-        <p class="puzzle-name" id="puzzle-name"></p>
 
         <div class="puzzle-row">
           <div class="puzzle-container">
@@ -235,6 +261,8 @@
           </div>
           <div class="palette" id="palette"></div>
         </div>
+
+        <div class="progress-tracker" id="progress-tracker"></div>
 
         <div class="status" id="status"></div>
       </div>
@@ -258,11 +286,25 @@
   // ===== DOM refs =====
   const svg = document.getElementById('puzzle-svg');
   const paletteEl = document.getElementById('palette');
-  const cardNum = document.getElementById('card-num');
-  const cardTotal = document.getElementById('card-total');
   const statusEl = document.getElementById('status');
   const celebrationEl = document.getElementById('celebration');
-  const puzzleNameEl = document.getElementById('puzzle-name');
+  const progressEl = document.getElementById('progress-tracker');
+
+  // 0 = not done, 1 = completed, 2 = completed with min colors
+  let completionStatus = loadCompletionStatus();
+
+  function loadCompletionStatus() {
+    try {
+      var saved = JSON.parse(localStorage.getItem('fourColoring_completion'));
+      if (Array.isArray(saved) && saved.length === 15) return saved;
+    } catch(e) {}
+    return new Array(15).fill(0);
+  }
+
+  function saveCompletionStatus() {
+    localStorage.setItem('fourColoring_completion', JSON.stringify(completionStatus));
+  }
+
 
   // ===== SVG path helpers =====
   function polar(cx, cy, r, deg) {
@@ -611,11 +653,35 @@
     });
 
     renderPalette(puzzle.numColors);
-    cardNum.textContent = index + 1;
-    cardTotal.textContent = PUZZLES.length;
-    puzzleNameEl.textContent = puzzle.name;
+
     statusEl.classList.remove('visible');
     statusEl.innerHTML = '';
+
+    renderProgress();
+  }
+
+  function renderProgress() {
+    progressEl.innerHTML = '';
+    for (var i = 0; i < PUZZLES.length; i++) {
+      var dot = document.createElement('div');
+      dot.className = 'progress-dot';
+      if (i === currentPuzzle) dot.classList.add('current');
+      if (completionStatus[i] === 2) {
+        dot.classList.add('star');
+        var starSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        starSvg.setAttribute('viewBox', '0 0 24 24');
+        starSvg.setAttribute('width', '14');
+        starSvg.setAttribute('height', '14');
+        var starPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        starPath.setAttribute('d', 'M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14 2 9.27l6.91-1.01z');
+        starPath.setAttribute('fill', '#f59e0b');
+        starSvg.appendChild(starPath);
+        dot.appendChild(starSvg);
+      } else if (completionStatus[i] === 1) {
+        dot.classList.add('completed');
+      }
+      progressEl.appendChild(dot);
+    }
   }
 
   function renderPalette(numColors) {
@@ -703,6 +769,12 @@
     var puzzle = PUZZLES[currentPuzzle];
     var usedColors = new Set(regionColors).size;
     var isMinimal = usedColors <= puzzle.minColors;
+
+    // Record completion
+    completionStatus[currentPuzzle] = isMinimal ? 2 : 1;
+    saveCompletionStatus();
+    renderProgress();
+
     var bonus = isMinimal && puzzle.numColors > puzzle.minColors
       ? '<p class="bonus-msg">Only ' + usedColors + ' color' + (usedColors !== 1 ? 's' : '') + ' used — perfect!</p>'
       : '';

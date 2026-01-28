@@ -290,19 +290,12 @@
 <body>
   <header>
     <h1>Math Club</h1>
-    <p>Cake Cutting</p>
   </header>
 
-  <nav>
-    <a href="../index.html">Home</a>
-    <a href="sharing-numbers.html">Sharing Numbers</a>
-    <a href="cake-cutting.html" class="active">Cake Cutting</a>
-    <a href="four-coloring.html">Four Coloring</a>
-    <a href="number-bonds.html">Number Bonds</a>
-  </nav>
-
   <main>
-    <a href="../index.html" class="back-link">&larr; Back to Activities</a>
+    <div class="back-row">
+      <a href="../index.html" class="back-btn" aria-label="Back to Activities"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10H5M5 10l5-5M5 10l5 5"/></svg></a>
+    </div>
 
     <div class="game-wrapper">
       <div class="game-card" onclick="dismissFeedback()">
@@ -327,6 +320,7 @@
 
         <!-- Game screen -->
         <div id="game-screen" style="display:none">
+          <h2 class="activity-title">Cake Cutting</h2>
           <div class="score-bar">
             <span>Best: <span class="best-value" id="best-score">0</span></span>
             <span>Score: <span class="score-value" id="score">0</span></span>
@@ -344,7 +338,7 @@
           </div>
 
           <div id="puzzle-content">
-            <p class="guest-display">&#x1F389; <span class="guest-count" id="guest-count">6</span> guests are coming!</p>
+            <p class="guest-display"><span class="guest-count" id="guest-count">6</span> guests are coming!</p>
             <p class="guest-question">Is there enough cake for everyone?</p>
             <div class="choices">
               <button class="btn btn-yes" onclick="event.stopPropagation(); answer(true)">Yes!</button>
@@ -361,6 +355,7 @@
 
         <!-- Game over screen -->
         <div id="gameover-screen" style="display:none">
+          <h2 class="activity-title">Cake Cutting</h2>
           <div class="gameover-icon">&#x23F0;</div>
           <div class="gameover-title">Time's Up!</div>
           <div class="gameover-score">

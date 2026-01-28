@@ -216,22 +216,16 @@
 <body>
   <header>
     <h1>Math Club</h1>
-    <p>Sharing Numbers</p>
   </header>
 
-  <nav>
-    <a href="../index.html">Home</a>
-    <a href="sharing-numbers.html" class="active">Sharing Numbers</a>
-    <a href="cake-cutting.html">Cake Cutting</a>
-    <a href="four-coloring.html">Four Coloring</a>
-    <a href="number-bonds.html">Number Bonds</a>
-  </nav>
-
   <main>
-    <a href="../index.html" class="back-link">&larr; Back to Activities</a>
+    <div class="back-row">
+      <a href="../index.html" class="back-btn" aria-label="Back to Activities"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10H5M5 10l5-5M5 10l5 5"/></svg></a>
+    </div>
 
     <div class="game-wrapper">
       <div class="game-card" onclick="dismissCorrect()">
+        <h2 class="activity-title">Sharing Numbers</h2>
         <div class="score-bar">
           <span>Round: <span class="round-value" id="round">1</span></span>
           <span>Best: <span class="high-score-value" id="high-score">0</span></span>
