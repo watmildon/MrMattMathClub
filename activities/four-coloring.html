@@ -151,10 +151,11 @@
       100% { opacity: 1; transform: scale(1); }
     }
 
-    /* ---- SVG region styles ---- */
-    @keyframes conflictPulse {
-      0%   { stroke: #dc2626; stroke-width: 5; }
-      100% { stroke: #64748b; stroke-width: 2; }
+    /* ---- Conflict X markers ---- */
+    .conflict-x line {
+      stroke: #1e293b;
+      stroke-width: 6;
+      stroke-linecap: round;
     }
 
     /* ---- Celebration burst ---- */
@@ -211,13 +212,22 @@
     }
 
     .progress-dot.current {
-      border-color: #7c3aed;
-      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+      border-color: #1e293b;
+      border-width: 3.5px;
+      box-shadow: 0 0 0 3px rgba(30, 41, 59, 0.25);
     }
 
     .progress-dot.completed {
       border-color: #94a3b8;
       background: #94a3b8;
+    }
+
+    .progress-dot.clickable {
+      cursor: pointer;
+    }
+
+    .progress-dot.clickable:hover {
+      transform: scale(1.25);
     }
 
     .progress-dot.star {
@@ -622,6 +632,7 @@
     var puzzle = PUZZLES[index];
     solved = false;
     regionColors = new Array(puzzle.regions.length).fill(null);
+    borderMidpointCache = {};
 
     svg.innerHTML = '';
 
@@ -647,6 +658,11 @@
     renderProgress();
   }
 
+  function isAccessible(index) {
+    if (index === 0) return true;
+    return completionStatus[index - 1] > 0;
+  }
+
   function renderProgress() {
     progressEl.innerHTML = '';
     for (var i = 0; i < PUZZLES.length; i++) {
@@ -667,8 +683,19 @@
       } else if (completionStatus[i] === 1) {
         dot.classList.add('completed');
       }
+      if (i !== currentPuzzle && isAccessible(i)) {
+        dot.classList.add('clickable');
+        (function(idx) {
+          dot.addEventListener('click', function() { goToPuzzle(idx); });
+        })(i);
+      }
       progressEl.appendChild(dot);
     }
+  }
+
+  function goToPuzzle(index) {
+    currentPuzzle = index;
+    loadPuzzle(index);
   }
 
   function renderPalette(numColors) {
@@ -705,28 +732,10 @@
     var paths = svg.querySelectorAll('path');
     paths[index].setAttribute('fill', COLORS[selectedColorIndex]);
 
-    // Check for conflicts with neighbors
-    var puzzle = PUZZLES[currentPuzzle];
-    var conflicts = [];
-    for (var e = 0; e < puzzle.adjacency.length; e++) {
-      var a = puzzle.adjacency[e][0];
-      var b = puzzle.adjacency[e][1];
-      if (a === index && regionColors[b] !== null && regionColors[b] === regionColors[index]) {
-        conflicts.push(b);
-      }
-      if (b === index && regionColors[a] !== null && regionColors[a] === regionColors[index]) {
-        conflicts.push(a);
-      }
-    }
-
-    if (conflicts.length > 0) {
-      flashConflict(paths[index]);
-      conflicts.forEach(function(ci) {
-        flashConflict(paths[ci]);
-      });
-    }
+    drawConflictMarkers();
 
     // Check completion
+    var puzzle = PUZZLES[currentPuzzle];
     if (regionColors.every(function(c) { return c !== null; })) {
       var valid = true;
       for (var e = 0; e < puzzle.adjacency.length; e++) {
@@ -742,13 +751,109 @@
     }
   }
 
-  function flashConflict(pathEl) {
-    pathEl.style.stroke = '#dc2626';
-    pathEl.style.strokeWidth = '5';
-    setTimeout(function() {
-      pathEl.style.stroke = REGION_STROKE;
-      pathEl.style.strokeWidth = '2';
-    }, 500);
+  var borderMidpointCache = {};
+
+  function computeBorderMidpoint(a, b) {
+    var paths = svg.querySelectorAll('path');
+    var pathA = paths[a];
+    var pathB = paths[b];
+    var lenA = pathA.getTotalLength();
+    var lenB = pathB.getTotalLength();
+    var N = 60;
+    var threshold = 4;
+    var shared = [];
+
+    for (var i = 0; i <= N; i++) {
+      var ptA = pathA.getPointAtLength(lenA * i / N);
+      for (var j = 0; j <= N; j++) {
+        var ptB = pathB.getPointAtLength(lenB * j / N);
+        var dx = ptA.x - ptB.x, dy = ptA.y - ptB.y;
+        if (dx * dx + dy * dy < threshold * threshold) {
+          shared.push({ x: (ptA.x + ptB.x) / 2, y: (ptA.y + ptB.y) / 2 });
+        }
+      }
+    }
+
+    if (shared.length === 0) {
+      var bA = pathA.getBBox(), bB = pathB.getBBox();
+      return { x: (bA.x + bA.width / 2 + bB.x + bB.width / 2) / 2,
+               y: (bA.y + bA.height / 2 + bB.y + bB.height / 2) / 2 };
+    }
+
+    // Compute centroid of shared boundary points
+    var sx = 0, sy = 0;
+    for (var i = 0; i < shared.length; i++) { sx += shared[i].x; sy += shared[i].y; }
+    var cx = sx / shared.length;
+    var cy = sy / shared.length;
+
+    // Find the shared point closest to the centroid
+    var minDist = Infinity;
+    var closest = shared[0];
+    for (var i = 0; i < shared.length; i++) {
+      var dx = shared[i].x - cx, dy = shared[i].y - cy;
+      var d = dx * dx + dy * dy;
+      if (d < minDist) { minDist = d; closest = shared[i]; }
+    }
+
+    // If centroid is far from any shared point, the boundary wraps
+    // around (e.g. a circle) and the centroid lands in the interior.
+    // Snap to the nearest actual boundary point instead.
+    if (Math.sqrt(minDist) > 15) return closest;
+
+    return { x: cx, y: cy };
+  }
+
+  function getBorderMidpoint(a, b) {
+    var key = Math.min(a, b) + '-' + Math.max(a, b);
+    if (!borderMidpointCache[key]) {
+      borderMidpointCache[key] = computeBorderMidpoint(a, b);
+    }
+    return borderMidpointCache[key];
+  }
+
+  function drawConflictMarkers() {
+    var existing = svg.querySelector('#conflict-markers');
+    if (existing) existing.remove();
+
+    var puzzle = PUZZLES[currentPuzzle];
+    var conflictEdges = [];
+
+    for (var e = 0; e < puzzle.adjacency.length; e++) {
+      var a = puzzle.adjacency[e][0];
+      var b = puzzle.adjacency[e][1];
+      if (regionColors[a] !== null && regionColors[b] !== null && regionColors[a] === regionColors[b]) {
+        conflictEdges.push([a, b]);
+      }
+    }
+
+    if (conflictEdges.length === 0) return;
+
+    var g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('id', 'conflict-markers');
+    g.setAttribute('class', 'conflict-x');
+    g.style.pointerEvents = 'none';
+
+    conflictEdges.forEach(function(pair) {
+      var mid = getBorderMidpoint(pair[0], pair[1]);
+      var size = 14;
+
+      var line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line1.setAttribute('x1', mid.x - size);
+      line1.setAttribute('y1', mid.y - size);
+      line1.setAttribute('x2', mid.x + size);
+      line1.setAttribute('y2', mid.y + size);
+
+      var line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line2.setAttribute('x1', mid.x + size);
+      line2.setAttribute('y1', mid.y - size);
+      line2.setAttribute('x2', mid.x - size);
+      line2.setAttribute('y2', mid.y + size);
+
+      g.appendChild(line1);
+      g.appendChild(line2);
+    });
+
+    svg.appendChild(g);
   }
 
   function showSuccess() {
