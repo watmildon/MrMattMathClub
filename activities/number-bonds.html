@@ -29,10 +29,27 @@
       color: #64748b;
     }
 
+    .score-bar > span {
+      flex: 1 1 0;
+    }
+
+    .score-bar > span:nth-child(2) {
+      text-align: center;
+    }
+
+    .score-bar > span:last-child {
+      text-align: right;
+    }
+
     .score-bar .score-value {
       font-weight: 700;
       color: #4c6ef5;
       font-size: 1.2rem;
+      transition: color 0.3s;
+    }
+
+    .score-bar .score-value.score-bump {
+      color: #10b981;
     }
 
     .score-bar .round-value {
@@ -410,24 +427,32 @@
 
   // ===== Difficulty =====
   function getRange() {
-    if (score < 5)  return { min: 3, max: 10 };
-    if (score < 10) return { min: 10, max: 20 };
-    if (score < 15) return { min: 15, max: 30 };
-    if (score < 30) return { min: 25, max: 50 };
+    if (round <= 5)  return { min: 3, max: 10 };
+    if (round <= 10) return { min: 10, max: 20 };
+    if (round <= 15) return { min: 15, max: 30 };
+    if (round <= 25) return { min: 25, max: 50 };
     return { min: 50, max: 99 };
   }
 
+  function getPointValue() {
+    if (round <= 5)  return 1;
+    if (round <= 10) return 2;
+    if (round <= 15) return 3;
+    if (round <= 25) return 5;
+    return 10;
+  }
+
   function pickMissing() {
-    // At low scores, mostly hide a part (subtraction).
-    // At higher scores, sometimes hide the total (addition).
+    // At early rounds, mostly hide a part (subtraction).
+    // At later rounds, sometimes hide the total (addition).
     var r = Math.random();
-    if (score < 5) {
+    if (round <= 5) {
       // 90% part, 10% total
       if (r < 0.45) return "partA";
       if (r < 0.90) return "partB";
       return "total";
     }
-    if (score < 15) {
+    if (round <= 15) {
       // 70% part, 30% total
       if (r < 0.35) return "partA";
       if (r < 0.70) return "partB";
@@ -526,8 +551,14 @@
     if (entered === correctAnswer) {
       // Correct!
       awaitingNext = true;
-      score++;
-      scoreEl.textContent = score;
+      var pts = getPointValue();
+      score += pts;
+      scoreEl.textContent = "+" + pts;
+      scoreEl.classList.add("score-bump");
+      setTimeout(function() {
+        scoreEl.textContent = score;
+        scoreEl.classList.remove("score-bump");
+      }, 1200);
 
       blankEl.classList.remove("blank");
       blankEl.classList.add("correct-highlight");
