@@ -114,7 +114,7 @@ var FourColorEngine = (function() {
 
   // ---- Conflict marker drawing ----
 
-  function drawConflictMarkers(svgEl, adjacency, regionColors, cache) {
+  function drawConflictMarkers(svgEl, adjacency, regionColors, cache, options) {
     var existing = svgEl.querySelector('#conflict-markers');
     if (existing) existing.remove();
 
@@ -129,6 +129,13 @@ var FourColorEngine = (function() {
 
     if (conflictEdges.length === 0) return;
 
+    // Optional zoom scale: when zoomed in, shrink markers so they don't dominate
+    var zoom = (options && options.zoom) ? options.zoom : 1;
+    var baseSize = 14;
+    var baseStroke = 6;
+    var size = baseSize / zoom;
+    var strokeW = baseStroke / zoom;
+
     var g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     g.setAttribute('id', 'conflict-markers');
     g.setAttribute('class', 'conflict-x');
@@ -136,19 +143,20 @@ var FourColorEngine = (function() {
 
     conflictEdges.forEach(function(pair) {
       var mid = getBorderMidpoint(cache, svgEl, pair[0], pair[1]);
-      var size = 14;
 
       var line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       line1.setAttribute('x1', mid.x - size);
       line1.setAttribute('y1', mid.y - size);
       line1.setAttribute('x2', mid.x + size);
       line1.setAttribute('y2', mid.y + size);
+      line1.setAttribute('stroke-width', strokeW);
 
       var line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       line2.setAttribute('x1', mid.x + size);
       line2.setAttribute('y1', mid.y - size);
       line2.setAttribute('x2', mid.x - size);
       line2.setAttribute('y2', mid.y + size);
+      line2.setAttribute('stroke-width', strokeW);
 
       g.appendChild(line1);
       g.appendChild(line2);
