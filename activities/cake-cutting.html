@@ -5,6 +5,287 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cake Cutting - Math Club</title>
   <link rel="stylesheet" href="../styles.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #fdf2f8, #ede9fe, #dbeafe, #d1fae5);
+      background-size: 400% 400%;
+      animation: gradientShift 12s ease infinite;
+    }
+
+    @keyframes gradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .game-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ---- Score bar ---- */
+    .score-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      font-size: 1.05rem;
+      color: #64748b;
+    }
+
+    .score-bar .score-value {
+      font-weight: 700;
+      color: #4c6ef5;
+      font-size: 1.2rem;
+    }
+
+    .score-bar .best-value {
+      font-weight: 700;
+      color: #f59e0b;
+    }
+
+    /* ---- Timer bar ---- */
+    .timer-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .timer-bar {
+      flex: 1;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .timer-fill {
+      height: 100%;
+      border-radius: 5px;
+      background: #10b981;
+      width: 100%;
+      transition: width 0.1s linear;
+    }
+
+    .timer-text {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #64748b;
+      min-width: 36px;
+      text-align: right;
+    }
+
+    /* ---- Cake ---- */
+    .cake-area {
+      display: flex;
+      justify-content: center;
+      margin: 1.25rem 0;
+    }
+
+    .cake {
+      display: grid;
+      gap: 3px;
+      padding: 8px;
+      border-radius: 10px;
+      border: 3px solid;
+      animation: cakeAppear 0.3s ease;
+    }
+
+    .cake-piece {
+      border-radius: 3px;
+    }
+
+    @keyframes cakeAppear {
+      0%   { transform: scale(0.85); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ---- Guest display ---- */
+    .guest-display {
+      font-size: 1.3rem;
+      color: #475569;
+      margin-bottom: 0.25rem;
+    }
+
+    .guest-count {
+      font-weight: 800;
+      color: #7c3aed;
+      font-size: 1.5rem;
+    }
+
+    .guest-question {
+      font-size: 1.1rem;
+      color: #64748b;
+      margin-bottom: 1.25rem;
+    }
+
+    /* ---- Buttons ---- */
+    .choices {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem 2.5rem;
+      font-size: 1.15rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-yes   { background: linear-gradient(135deg, #10b981, #34d399); }
+    .btn-no    { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+    .btn-start { background: linear-gradient(135deg, #7c3aed, #4c6ef5); padding: 1rem 3rem; font-size: 1.2rem; margin-top: 1.5rem; }
+    .btn-again { background: linear-gradient(135deg, #7c3aed, #4c6ef5); margin-top: 1.5rem; }
+
+    /* ---- Feedback ---- */
+    .feedback-overlay {
+      margin-top: 1rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      animation: popIn 0.3s ease;
+    }
+
+    .feedback-correct { color: #059669; }
+    .feedback-wrong   { color: #dc2626; }
+
+    .feedback-detail {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #92400e;
+      background: #fef3c7;
+      border-radius: 10px;
+      padding: 0.6rem 1.25rem;
+      margin-top: 0.5rem;
+      display: inline-block;
+    }
+
+    .dismiss-hint {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 0.75rem;
+      cursor: pointer;
+    }
+
+    @keyframes popIn {
+      0%   { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ---- Start screen ---- */
+    .start-icon {
+      font-size: 3.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .start-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 1rem;
+    }
+
+    .start-desc {
+      font-size: 1.05rem;
+      color: #475569;
+      line-height: 1.6;
+      margin-bottom: 0.5rem;
+    }
+
+    .start-highlight {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #7c3aed;
+      background: #ede9fe;
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      margin: 1rem 0;
+      display: inline-block;
+    }
+
+    .start-best {
+      color: #f59e0b;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+
+    /* ---- Game over ---- */
+    .gameover-icon {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .gameover-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 0.75rem;
+    }
+
+    .gameover-score {
+      font-size: 1.2rem;
+      color: #475569;
+    }
+
+    .gameover-score .big-score {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #4c6ef5;
+      display: block;
+      margin: 0.5rem 0;
+    }
+
+    .gameover-best {
+      font-size: 1rem;
+      color: #f59e0b;
+      font-weight: 600;
+      margin-top: 0.25rem;
+    }
+
+    /* ---- Celebration ---- */
+    .game-wrapper {
+      position: relative;
+    }
+
+    .celebration {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      opacity: 0;
+    }
+
+    @keyframes confettiFall {
+      0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(120px) rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -23,14 +304,380 @@
   <main>
     <a href="../index.html" class="back-link">&larr; Back to Activities</a>
 
-    <div class="activity-container">
-      <h2>Cake Cutting</h2>
-      <div class="placeholder-msg">
-        <span class="icon">&#x1F370;</span>
-        Activity coming soon!
+    <div class="game-wrapper">
+      <div class="game-card" onclick="dismissFeedback()">
+
+        <!-- Start screen -->
+        <div id="start-screen">
+          <div class="start-icon">&#x1F382;</div>
+          <div class="start-title">Cake Cutting!</div>
+          <p class="start-desc">
+            A cake has been sliced into pieces for a party.
+          </p>
+          <p class="start-desc">
+            You decide: are there enough pieces for all the guests?
+          </p>
+          <div class="start-highlight">&#x23F1;&#xFE0F; You have 60 seconds!</div>
+          <p class="start-best" id="start-best" style="display:none">
+            Your best: <span id="start-best-score">0</span>
+          </p>
+          <br>
+          <button class="btn btn-start" onclick="event.stopPropagation(); startGame()">Start Game</button>
+        </div>
+
+        <!-- Game screen -->
+        <div id="game-screen" style="display:none">
+          <div class="score-bar">
+            <span>Best: <span class="best-value" id="best-score">0</span></span>
+            <span>Score: <span class="score-value" id="score">0</span></span>
+          </div>
+
+          <div class="timer-container">
+            <div class="timer-bar">
+              <div class="timer-fill" id="timer-fill"></div>
+            </div>
+            <div class="timer-text" id="timer-text">1:00</div>
+          </div>
+
+          <div class="cake-area">
+            <div class="cake" id="cake"></div>
+          </div>
+
+          <div id="puzzle-content">
+            <p class="guest-display">&#x1F389; <span class="guest-count" id="guest-count">6</span> guests are coming!</p>
+            <p class="guest-question">Is there enough cake for everyone?</p>
+            <div class="choices">
+              <button class="btn btn-yes" onclick="event.stopPropagation(); answer(true)">Yes!</button>
+              <button class="btn btn-no" onclick="event.stopPropagation(); answer(false)">No!</button>
+            </div>
+          </div>
+
+          <div id="feedback" style="display:none">
+            <div class="feedback-overlay" id="feedback-msg"></div>
+            <div class="feedback-detail" id="feedback-detail" style="display:none"></div>
+            <p class="dismiss-hint">Click to continue</p>
+          </div>
+        </div>
+
+        <!-- Game over screen -->
+        <div id="gameover-screen" style="display:none">
+          <div class="gameover-icon">&#x23F0;</div>
+          <div class="gameover-title">Time's Up!</div>
+          <div class="gameover-score">
+            You got
+            <span class="big-score" id="final-score">0</span>
+            correct!
+          </div>
+          <div class="gameover-best" id="gameover-best"></div>
+          <button class="btn btn-again" onclick="event.stopPropagation(); resetGame()">Play Again</button>
+        </div>
+
       </div>
+      <div class="celebration" id="celebration"></div>
     </div>
   </main>
 
+<script>
+  const GAME_DURATION = 60;
+
+  let score = 0;
+  let round = 0;
+  let highScore = parseInt(localStorage.getItem("cakeCutting_highScore")) || 0;
+  let timeRemaining = GAME_DURATION;
+  let timerInterval = null;
+  let currentPuzzle = null;
+  let feedbackTimeout = null;
+  let answering = false;
+
+  // DOM refs
+  const startScreen   = document.getElementById("start-screen");
+  const gameScreen    = document.getElementById("game-screen");
+  const gameoverScreen = document.getElementById("gameover-screen");
+  const bestScoreEl   = document.getElementById("best-score");
+  const scoreEl       = document.getElementById("score");
+  const timerFill     = document.getElementById("timer-fill");
+  const timerText     = document.getElementById("timer-text");
+  const cakeEl        = document.getElementById("cake");
+  const guestCountEl  = document.getElementById("guest-count");
+  const puzzleContent = document.getElementById("puzzle-content");
+  const feedbackEl    = document.getElementById("feedback");
+  const feedbackMsg   = document.getElementById("feedback-msg");
+  const feedbackDetail = document.getElementById("feedback-detail");
+  const finalScoreEl  = document.getElementById("final-score");
+  const gameoverBest  = document.getElementById("gameover-best");
+  const celebration   = document.getElementById("celebration");
+
+  // Cake visual themes (different "flavors")
+  const THEMES = [
+    { bg: "#ec4899", border: "#db2777", pieceFrom: "#fce7f3", pieceTo: "#fbcfe8", shadow: "rgba(236,72,153,0.3)" },
+    { bg: "#92400e", border: "#78350f", pieceFrom: "#fde68a", pieceTo: "#fcd34d", shadow: "rgba(146,64,14,0.3)" },
+    { bg: "#f59e0b", border: "#d97706", pieceFrom: "#fef3c7", pieceTo: "#fde68a", shadow: "rgba(245,158,11,0.3)" },
+    { bg: "#7c3aed", border: "#6d28d9", pieceFrom: "#ede9fe", pieceTo: "#ddd6fe", shadow: "rgba(124,58,237,0.3)" },
+    { bg: "#059669", border: "#047857", pieceFrom: "#d1fae5", pieceTo: "#a7f3d0", shadow: "rgba(5,150,105,0.3)" },
+  ];
+  let lastThemeIndex = -1;
+
+  /* ---- Helpers ---- */
+
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function getTier() {
+    if (score < 5)  return 1;
+    if (score < 10) return 2;
+    if (score < 18) return 3;
+    return 4;
+  }
+
+  /* ---- Puzzle generation ---- */
+
+  function generatePuzzle() {
+    const tier = getTier();
+    let vCuts, hCuts, cols, rows;
+
+    // Pick cuts per dimension independently; re-roll if total is too small
+    var minPieces = tier <= 1 ? 4 : tier === 2 ? 6 : tier === 3 ? 10 : 16;
+    do {
+      switch (tier) {
+        case 1:  vCuts = randInt(1, 2); hCuts = randInt(1, 2); break;
+        case 2:  vCuts = randInt(1, 4); hCuts = randInt(1, 3); break;
+        case 3:  vCuts = randInt(1, 6); hCuts = randInt(1, 5); break;
+        default: vCuts = randInt(1, 8); hCuts = randInt(1, 6); break;
+      }
+      cols = vCuts + 1;
+      rows = hCuts + 1;
+    } while (cols * rows < minPieces);
+
+    const totalPieces = cols * rows;
+
+    // 50 % of the time guests fit (yes), 50 % they don't (no)
+    const wantYes = Math.random() < 0.5;
+    let guestCount;
+
+    if (wantYes) {
+      // Guests <= pieces (enough cake). Bias toward being close.
+      const options = [totalPieces, totalPieces];
+      if (totalPieces - 1 > 0) options.push(totalPieces - 1);
+      if (totalPieces - 2 > 0) options.push(totalPieces - 2);
+      guestCount = options[Math.floor(Math.random() * options.length)];
+    } else {
+      // Guests > pieces (not enough cake). Stay close.
+      const options = [totalPieces + 1, totalPieces + 1, totalPieces + 2, totalPieces + 3];
+      if ((cols + 1) * rows > totalPieces) options.push((cols + 1) * rows);
+      if (cols * (rows + 1) > totalPieces) options.push(cols * (rows + 1));
+      guestCount = options[Math.floor(Math.random() * options.length)];
+    }
+
+    const isCorrect = guestCount <= totalPieces;
+
+    // Avoid exact repeat
+    if (currentPuzzle &&
+        cols === currentPuzzle.cols &&
+        rows === currentPuzzle.rows &&
+        guestCount === currentPuzzle.guestCount) {
+      return generatePuzzle();
+    }
+
+    // Pick a different cake theme
+    let themeIndex;
+    do {
+      themeIndex = Math.floor(Math.random() * THEMES.length);
+    } while (themeIndex === lastThemeIndex);
+    lastThemeIndex = themeIndex;
+
+    return { vCuts, hCuts, cols, rows, totalPieces, guestCount, isCorrect, theme: THEMES[themeIndex] };
+  }
+
+  /* ---- Cake rendering ---- */
+
+  function renderCake(puzzle) {
+    const { cols, rows, theme } = puzzle;
+
+    cakeEl.style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
+    cakeEl.style.gridTemplateRows    = "repeat(" + rows + ", 1fr)";
+    cakeEl.style.background   = theme.bg;
+    cakeEl.style.borderColor  = theme.border;
+    cakeEl.style.boxShadow    = "0 4px 16px " + theme.shadow;
+    cakeEl.innerHTML = "";
+
+    // Re-trigger pop-in animation
+    cakeEl.style.animation = "none";
+    cakeEl.offsetHeight;
+    cakeEl.style.animation = "";
+
+    // Size pieces so the cake scales with grid dimensions
+    var maxDim = Math.max(cols, rows);
+    var pieceSize = maxDim <= 3 ? 50 : maxDim <= 4 ? 42 : maxDim <= 5 ? 36 : maxDim <= 6 ? 30 : maxDim <= 7 ? 26 : 22;
+    var gap = 3;
+    var pad = 8;
+
+    cakeEl.style.width  = (cols * pieceSize + (cols - 1) * gap + pad * 2) + "px";
+    cakeEl.style.height = (rows * pieceSize + (rows - 1) * gap + pad * 2) + "px";
+
+    for (var i = 0; i < cols * rows; i++) {
+      var piece = document.createElement("div");
+      piece.className = "cake-piece";
+      piece.style.background = "linear-gradient(135deg, " + theme.pieceFrom + ", " + theme.pieceTo + ")";
+      cakeEl.appendChild(piece);
+    }
+  }
+
+  /* ---- Timer ---- */
+
+  function updateTimer() {
+    var pct = Math.max(0, timeRemaining / GAME_DURATION * 100);
+    timerFill.style.width = pct + "%";
+
+    if (timeRemaining <= 10)      timerFill.style.background = "#dc2626";
+    else if (timeRemaining <= 20) timerFill.style.background = "#f59e0b";
+    else                          timerFill.style.background = "#10b981";
+
+    var secs = Math.ceil(timeRemaining);
+    var m = Math.floor(secs / 60);
+    var s = secs % 60;
+    timerText.textContent = m + ":" + String(s).padStart(2, "0");
+  }
+
+  /* ---- Game flow ---- */
+
+  function startGame() {
+    score = 0;
+    round = 0;
+    timeRemaining = GAME_DURATION;
+    answering = false;
+
+    scoreEl.textContent = "0";
+    bestScoreEl.textContent = highScore;
+
+    timerFill.style.width = "100%";
+    timerFill.style.background = "#10b981";
+
+    startScreen.style.display   = "none";
+    gameoverScreen.style.display = "none";
+    gameScreen.style.display    = "block";
+
+    updateTimer();
+    nextPuzzle();
+
+    timerInterval = setInterval(function () {
+      timeRemaining -= 0.1;
+      if (timeRemaining <= 0) {
+        timeRemaining = 0;
+        clearInterval(timerInterval);
+        timerInterval = null;
+        if (feedbackTimeout) { clearTimeout(feedbackTimeout); feedbackTimeout = null; }
+        updateTimer();
+        endGame();
+        return;
+      }
+      updateTimer();
+    }, 100);
+  }
+
+  function nextPuzzle() {
+    round++;
+    currentPuzzle = generatePuzzle();
+    renderCake(currentPuzzle);
+    guestCountEl.textContent = currentPuzzle.guestCount;
+
+    puzzleContent.style.display = "block";
+    feedbackEl.style.display    = "none";
+    answering = false;
+  }
+
+  function answer(saidYes) {
+    if (answering) return;
+    answering = true;
+
+    var correct = saidYes === currentPuzzle.isCorrect;
+
+    puzzleContent.style.display = "none";
+    feedbackEl.style.display    = "block";
+
+    // Re-trigger pop-in on feedback
+    feedbackMsg.style.animation = "none";
+    feedbackMsg.offsetHeight;
+    feedbackMsg.style.animation = "";
+
+    if (correct) {
+      score++;
+      scoreEl.textContent = score;
+      feedbackMsg.className   = "feedback-overlay feedback-correct";
+      feedbackMsg.textContent = "\u2713 Correct!";
+      feedbackDetail.style.display = "none";
+
+      feedbackTimeout = setTimeout(function () {
+        feedbackTimeout = null;
+        if (timeRemaining > 0) nextPuzzle();
+      }, 700);
+    } else {
+      var cols = currentPuzzle.cols;
+      var rows = currentPuzzle.rows;
+      var total = currentPuzzle.totalPieces;
+      var guests = currentPuzzle.guestCount;
+
+      feedbackMsg.className   = "feedback-overlay feedback-wrong";
+      feedbackMsg.textContent = "\u2717 Not quite!";
+      feedbackDetail.style.display = "inline-block";
+      if (currentPuzzle.isCorrect) {
+        feedbackDetail.textContent = cols + " \u00D7 " + rows + " = " + total + " pieces \u2014 enough for " + guests + "!";
+      } else {
+        feedbackDetail.textContent = cols + " \u00D7 " + rows + " = " + total + " pieces \u2014 not enough for " + guests + "!";
+      }
+
+      feedbackTimeout = setTimeout(function () {
+        feedbackTimeout = null;
+        if (timeRemaining > 0) nextPuzzle();
+      }, 1500);
+    }
+  }
+
+  function endGame() {
+    gameScreen.style.display    = "none";
+    gameoverScreen.style.display = "block";
+    finalScoreEl.textContent     = score;
+
+    if (score > highScore) {
+      highScore = score;
+      localStorage.setItem("cakeCutting_highScore", highScore);
+      gameoverBest.textContent = "\uD83C\uDF89 New best: " + score + "!";
+      showConfetti();
+    } else {
+      gameoverBest.textContent = "Best: " + highScore;
+    }
+  }
+
+  function dismissFeedback() {
+    if (!feedbackTimeout) return;
+    clearTimeout(feedbackTimeout);
+    feedbackTimeout = null;
+    if (timeRemaining > 0) nextPuzzle();
+  }
+
+  function resetGame() {
+    startGame();
+  }
+
+  function showConfetti() {
+    celebration.innerHTML = "";
+    var colors = ["#7c3aed", "#4c6ef5", "#10b981", "#f59e0b", "#ec4899", "#34d399"];
+    for (var i = 0; i < 30; i++) {
+      var dot = document.createElement("div");
+      dot.className = "confetti";
+      dot.style.left = Math.random() * 100 + "%";
+      dot.style.top  = Math.random() * 40 + "%";
+      dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+      dot.style.animation  = "confettiFall 1s " + (Math.random() * 0.4) + "s ease-out forwards";
+      celebration.appendChild(dot);
+    }
+  }
+
+  // Init — show high score on start screen if one exists
+  if (highScore > 0) {
+    document.getElementById("start-best").style.display = "block";
+    document.getElementById("start-best-score").textContent = highScore;
+  }
+</script>
 </body>
 </html>
