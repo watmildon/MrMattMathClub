@@ -5,6 +5,323 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Number Bonds - Math Club</title>
   <link rel="stylesheet" href="../styles.css">
+  <style>
+    /* ---- Animated gradient background ---- */
+    body {
+      background: linear-gradient(135deg, #fdf2f8, #ede9fe, #dbeafe, #d1fae5);
+      background-size: 400% 400%;
+      animation: gradientShift 12s ease infinite;
+    }
+
+    @keyframes gradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* ---- Game card ---- */
+    .game-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ---- Score display ---- */
+    .score-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.05rem;
+      color: #64748b;
+    }
+
+    .score-bar .score-value {
+      font-weight: 700;
+      color: #4c6ef5;
+      font-size: 1.2rem;
+    }
+
+    .score-bar .round-value {
+      font-weight: 600;
+      color: #7c3aed;
+    }
+
+    .score-bar .high-score-value {
+      font-weight: 700;
+      color: #f59e0b;
+    }
+
+    /* ---- Bond layout ---- */
+    .bond-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .bond-diagram {
+      position: relative;
+      width: 240px;
+      height: 180px;
+      flex-shrink: 0;
+    }
+
+    .bond-lines {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .bond-line {
+      stroke: #94a3b8;
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
+    /* ---- Circles ---- */
+    .bond-circle {
+      position: absolute;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #1e293b;
+      background: white;
+      border: 3px solid #94a3b8;
+      z-index: 1;
+    }
+
+    .circle-total {
+      width: 90px;
+      height: 90px;
+      font-size: 1.8rem;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .circle-part {
+      width: 70px;
+      height: 70px;
+      font-size: 1.5rem;
+    }
+
+    .circle-part-a {
+      left: 0;
+      top: 0;
+    }
+
+    .circle-part-b {
+      left: 0;
+      bottom: 0;
+    }
+
+    .bond-circle.blank {
+      border: 3px dashed #7c3aed;
+      background: #f5f3ff;
+      color: #7c3aed;
+      animation: blankPulse 2s ease-in-out infinite;
+      cursor: pointer;
+    }
+
+    .bond-circle.blank.has-value {
+      animation: none;
+      border-color: #7c3aed;
+      background: #ede9fe;
+    }
+
+    @keyframes blankPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.3); }
+      50%      { box-shadow: 0 0 0 8px rgba(124, 58, 237, 0); }
+    }
+
+    .bond-circle.correct-highlight {
+      border-color: #10b981;
+      background: #d1fae5;
+      color: #059669;
+      animation: none;
+    }
+
+    .bond-circle.wrong-highlight {
+      border-color: #dc2626;
+      background: #fee2e2;
+      color: #dc2626;
+      animation: none;
+    }
+
+    /* ---- Numpad ---- */
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      flex-shrink: 0;
+      width: 144px;
+    }
+
+    .numpad-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      border: 2px solid #e2e8f0;
+      background: white;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .numpad-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+      background: #f8fafc;
+    }
+
+    .numpad-btn:active {
+      transform: translateY(0);
+    }
+
+    .numpad-btn.submit-btn {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      color: white;
+      border-color: transparent;
+    }
+
+    .numpad-btn.submit-btn:hover {
+      background: linear-gradient(135deg, #059669, #10b981);
+    }
+
+    .numpad-btn.backspace-btn {
+      background: #fef3c7;
+      color: #92400e;
+      border-color: transparent;
+    }
+
+    .numpad-btn.backspace-btn:hover {
+      background: #fde68a;
+    }
+
+    /* ---- Buttons ---- */
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-again {
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      margin-top: 1.5rem;
+    }
+
+    /* ---- Feedback states ---- */
+    .feedback {
+      display: none;
+      margin-top: 1rem;
+    }
+
+    .feedback.visible {
+      display: block;
+    }
+
+    .feedback-correct {
+      color: #059669;
+      font-size: 1.3rem;
+      font-weight: 700;
+      animation: popIn 0.35s ease;
+    }
+
+    .feedback-wrong {
+      animation: popIn 0.35s ease;
+    }
+
+    .feedback-wrong .wrong-label {
+      color: #dc2626;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .feedback-wrong .explanation {
+      background: #fef3c7;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      font-size: 1.05rem;
+      color: #92400e;
+      line-height: 1.5;
+      margin-bottom: 0.5rem;
+    }
+
+    .final-score {
+      font-size: 1.1rem;
+      color: #64748b;
+      margin-top: 0.75rem;
+    }
+
+    .dismiss-hint {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 0.75rem;
+      cursor: pointer;
+    }
+
+    .game-card.clickable {
+      cursor: pointer;
+    }
+
+    @keyframes popIn {
+      0%   { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ---- Celebration burst ---- */
+    .celebration {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      opacity: 0;
+    }
+
+    @keyframes confettiFall {
+      0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(120px) rotate(360deg); }
+    }
+
+    .game-wrapper {
+      position: relative;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -23,14 +340,326 @@
   <main>
     <a href="../index.html" class="back-link">&larr; Back to Activities</a>
 
-    <div class="activity-container">
-      <h2>Number Bonds</h2>
-      <div class="placeholder-msg">
-        <span class="icon">&#x1F517;</span>
-        Activity coming soon!
+    <div class="game-wrapper">
+      <div class="game-card" id="game-card" onclick="dismissCorrect()">
+        <div class="score-bar">
+          <span>Round: <span class="round-value" id="round">1</span></span>
+          <span>Best: <span class="high-score-value" id="high-score">0</span></span>
+          <span>Score: <span class="score-value" id="score">0</span></span>
+        </div>
+
+        <div id="game-area">
+          <div class="bond-row">
+            <div class="bond-diagram" id="bond-diagram">
+              <svg class="bond-lines" viewBox="0 0 240 180">
+                <line class="bond-line" id="line-a" x1="70" y1="35" x2="195" y2="90"></line>
+                <line class="bond-line" id="line-b" x1="70" y1="145" x2="195" y2="90"></line>
+              </svg>
+              <div class="bond-circle circle-part circle-part-a" id="circle-a"></div>
+              <div class="bond-circle circle-part circle-part-b" id="circle-b"></div>
+              <div class="bond-circle circle-total" id="circle-total"></div>
+            </div>
+
+            <div class="numpad" id="numpad">
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('1')">1</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('2')">2</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('3')">3</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('4')">4</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('5')">5</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('6')">6</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('7')">7</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('8')">8</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('9')">9</button>
+              <button class="numpad-btn backspace-btn" onclick="event.stopPropagation(); doBackspace()" aria-label="Backspace">&larr;</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('0')">0</button>
+              <button class="numpad-btn submit-btn" onclick="event.stopPropagation(); submitAnswer()" aria-label="Submit">&check;</button>
+            </div>
+          </div>
+
+          <div class="feedback" id="feedback-correct">
+            <p class="feedback-correct" id="correct-msg"></p>
+            <p class="dismiss-hint">Click to continue</p>
+          </div>
+
+          <div class="feedback feedback-wrong" id="feedback-wrong">
+            <p class="wrong-label" id="wrong-label"></p>
+            <div class="explanation" id="explanation"></div>
+            <p class="final-score" id="final-score"></p>
+            <button class="btn btn-again" onclick="event.stopPropagation(); resetGame()">Play Again</button>
+          </div>
+        </div>
       </div>
+
+      <div class="celebration" id="celebration"></div>
     </div>
   </main>
 
+<script>
+  // ===== State =====
+  let score = 0;
+  let round = 1;
+  let awaitingNext = false;
+  let gameOver = false;
+  let advanceTimer = null;
+  let highScore = parseInt(localStorage.getItem("numberBonds_highScore")) || 0;
+
+  let currentTotal = 0;
+  let currentPartA = 0;
+  let currentPartB = 0;
+  let missingCircle = ""; // "total", "partA", or "partB"
+  let correctAnswer = 0;
+  let typedValue = "";
+
+  let lastTotal = -1;
+  let lastPartA = -1;
+  let lastPartB = -1;
+  let lastMissing = "";
+
+  // ===== DOM refs =====
+  const gameCard = document.getElementById("game-card");
+  const scoreEl = document.getElementById("score");
+  const roundEl = document.getElementById("round");
+  const highScoreEl = document.getElementById("high-score");
+  const circleA = document.getElementById("circle-a");
+  const circleB = document.getElementById("circle-b");
+  const circleTotal = document.getElementById("circle-total");
+  const numpadEl = document.getElementById("numpad");
+  const feedbackCorrect = document.getElementById("feedback-correct");
+  const correctMsg = document.getElementById("correct-msg");
+  const feedbackWrong = document.getElementById("feedback-wrong");
+  const wrongLabel = document.getElementById("wrong-label");
+  const explanationEl = document.getElementById("explanation");
+  const finalScoreEl = document.getElementById("final-score");
+  const celebration = document.getElementById("celebration");
+
+  // ===== Difficulty =====
+  function getRange() {
+    if (score < 5)  return { min: 3, max: 10 };
+    if (score < 10) return { min: 10, max: 20 };
+    if (score < 15) return { min: 15, max: 30 };
+    if (score < 30) return { min: 25, max: 50 };
+    return { min: 50, max: 99 };
+  }
+
+  function pickMissing() {
+    // At low scores, mostly hide a part (subtraction).
+    // At higher scores, sometimes hide the total (addition).
+    var r = Math.random();
+    if (score < 5) {
+      // 90% part, 10% total
+      if (r < 0.45) return "partA";
+      if (r < 0.90) return "partB";
+      return "total";
+    }
+    if (score < 15) {
+      // 70% part, 30% total
+      if (r < 0.35) return "partA";
+      if (r < 0.70) return "partB";
+      return "total";
+    }
+    // 50/50
+    if (r < 0.25) return "partA";
+    if (r < 0.50) return "partB";
+    return "total";
+  }
+
+  function generateBond() {
+    var { min, max } = getRange();
+    var total, partA, partB, missing;
+    var tries = 0;
+    do {
+      total = Math.floor(Math.random() * (max - min + 1)) + min;
+      // partA must be at least 1, at most total - 1
+      partA = Math.floor(Math.random() * (total - 1)) + 1;
+      partB = total - partA;
+      missing = pickMissing();
+      tries++;
+    } while (
+      tries < 50 &&
+      (total === lastTotal && partA === lastPartA && partB === lastPartB && missing === lastMissing)
+    );
+
+    lastTotal = total;
+    lastPartA = partA;
+    lastPartB = partB;
+    lastMissing = missing;
+
+    currentTotal = total;
+    currentPartA = partA;
+    currentPartB = partB;
+    missingCircle = missing;
+
+    if (missing === "total") correctAnswer = total;
+    else if (missing === "partA") correctAnswer = partA;
+    else correctAnswer = partB;
+  }
+
+  // ===== Rendering =====
+  function renderDiagram() {
+    // Reset styles
+    [circleA, circleB, circleTotal].forEach(function(c) {
+      c.classList.remove("blank", "has-value", "correct-highlight", "wrong-highlight");
+    });
+
+    // Set values
+    circleTotal.textContent = missingCircle === "total" ? "" : currentTotal;
+    circleA.textContent = missingCircle === "partA" ? "" : currentPartA;
+    circleB.textContent = missingCircle === "partB" ? "" : currentPartB;
+
+    // Mark blank
+    var blankEl = getBlankElement();
+    blankEl.classList.add("blank");
+  }
+
+  function getBlankElement() {
+    if (missingCircle === "total") return circleTotal;
+    if (missingCircle === "partA") return circleA;
+    return circleB;
+  }
+
+  function updateBlankDisplay() {
+    var blankEl = getBlankElement();
+    blankEl.textContent = typedValue || "?";
+    blankEl.classList.toggle("has-value", typedValue.length > 0);
+  }
+
+  // ===== Input =====
+  function typeDigit(d) {
+    if (awaitingNext || gameOver) return;
+    // Always allow 2 digits (max total is 99)
+    if (typedValue.length >= 2) return;
+    typedValue += d;
+    updateBlankDisplay();
+  }
+
+  function doBackspace() {
+    if (awaitingNext || gameOver) return;
+    if (typedValue.length > 0) {
+      typedValue = typedValue.slice(0, -1);
+      updateBlankDisplay();
+    }
+  }
+
+  function submitAnswer() {
+    if (awaitingNext || gameOver) return;
+    if (typedValue.length === 0) return;
+
+    var entered = parseInt(typedValue, 10);
+    var blankEl = getBlankElement();
+
+    if (entered === correctAnswer) {
+      // Correct!
+      awaitingNext = true;
+      score++;
+      scoreEl.textContent = score;
+
+      blankEl.classList.remove("blank");
+      blankEl.classList.add("correct-highlight");
+      blankEl.textContent = correctAnswer;
+
+      numpadEl.style.visibility = "hidden";
+      correctMsg.textContent = currentPartA + " + " + currentPartB + " = " + currentTotal;
+      feedbackCorrect.classList.add("visible");
+      gameCard.classList.add("clickable");
+      showConfetti();
+
+      advanceTimer = setTimeout(function() {
+        advanceTimer = null;
+        gameCard.classList.remove("clickable");
+        round++;
+        nextRound();
+      }, 3500);
+    } else {
+      // Wrong — game over
+      gameOver = true;
+      awaitingNext = true;
+
+      blankEl.classList.remove("blank");
+      blankEl.classList.add("wrong-highlight");
+
+      numpadEl.style.visibility = "hidden";
+      wrongLabel.textContent = "Not quite!";
+      explanationEl.textContent = currentPartA + " + " + currentPartB + " = " + currentTotal;
+
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("numberBonds_highScore", highScore);
+        highScoreEl.textContent = highScore;
+        finalScoreEl.textContent = "New best: " + score + " point" + (score !== 1 ? "s" : "") + "!";
+      } else {
+        finalScoreEl.textContent = "You scored " + score + " point" + (score !== 1 ? "s" : "") + "!";
+      }
+      feedbackWrong.classList.add("visible");
+    }
+  }
+
+  // ===== Keyboard input =====
+  document.addEventListener("keydown", function(e) {
+    if (awaitingNext && !gameOver && e.key === " ") {
+      dismissCorrect();
+      return;
+    }
+    if (awaitingNext && !gameOver && e.key === "Enter") {
+      dismissCorrect();
+      return;
+    }
+    if (e.key >= "0" && e.key <= "9") {
+      typeDigit(e.key);
+    } else if (e.key === "Backspace") {
+      doBackspace();
+    } else if (e.key === "Enter") {
+      submitAnswer();
+    }
+  });
+
+  // ===== Round management =====
+  function nextRound() {
+    typedValue = "";
+    awaitingNext = false;
+    generateBond();
+    renderDiagram();
+    updateBlankDisplay();
+    roundEl.textContent = round;
+    scoreEl.textContent = score;
+    numpadEl.style.visibility = "visible";
+    feedbackCorrect.classList.remove("visible");
+    feedbackWrong.classList.remove("visible");
+  }
+
+  function dismissCorrect() {
+    if (!advanceTimer) return;
+    clearTimeout(advanceTimer);
+    advanceTimer = null;
+    gameCard.classList.remove("clickable");
+    round++;
+    nextRound();
+  }
+
+  function resetGame() {
+    score = 0;
+    round = 1;
+    gameOver = false;
+    nextRound();
+  }
+
+  // ===== Confetti =====
+  function showConfetti() {
+    celebration.innerHTML = "";
+    var colors = ["#7c3aed", "#4c6ef5", "#10b981", "#f59e0b", "#ec4899", "#34d399"];
+    for (var i = 0; i < 20; i++) {
+      var dot = document.createElement("div");
+      dot.className = "confetti";
+      dot.style.left = Math.random() * 100 + "%";
+      dot.style.top = Math.random() * 40 + "%";
+      dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+      dot.style.animation = "confettiFall 0.8s " + (Math.random() * 0.3) + "s ease-out forwards";
+      celebration.appendChild(dot);
+    }
+  }
+
+  // ===== Start =====
+  highScoreEl.textContent = highScore;
+  nextRound();
+</script>
 </body>
 </html>
