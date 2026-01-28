@@ -5,6 +5,195 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Four Coloring - Math Club</title>
   <link rel="stylesheet" href="../styles.css">
+  <style>
+    /* ---- Animated gradient background ---- */
+    body {
+      background: linear-gradient(135deg, #fdf2f8, #ede9fe, #dbeafe, #d1fae5);
+      background-size: 400% 400%;
+      animation: gradientShift 12s ease infinite;
+    }
+
+    @keyframes gradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* ---- Game card ---- */
+    .game-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .card-indicator {
+      font-size: 1.05rem;
+      color: #7c3aed;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .instruction {
+      font-size: 1.1rem;
+      color: #64748b;
+      margin-bottom: 1rem;
+    }
+
+    /* ---- Puzzle + Palette row ---- */
+    .puzzle-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .puzzle-container {
+      max-width: 300px;
+      flex: 1 1 auto;
+    }
+
+    #puzzle-svg {
+      width: 100%;
+      aspect-ratio: 1;
+      display: block;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+    }
+
+    /* ---- Color palette ---- */
+    .palette {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .swatch {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      padding: 0;
+      outline: none;
+    }
+
+    .swatch:hover {
+      transform: scale(1.1);
+    }
+
+    .swatch.selected {
+      border-color: #1e293b;
+      transform: scale(1.15);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    }
+
+    /* ---- Status area ---- */
+    .status {
+      display: none;
+      margin-top: 1rem;
+    }
+
+    .status.visible {
+      display: block;
+    }
+
+    .success-msg {
+      color: #059669;
+      font-size: 1.4rem;
+      font-weight: 700;
+      animation: popIn 0.35s ease;
+      margin-bottom: 0.5rem;
+    }
+
+    .finish-msg {
+      color: #7c3aed;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-next {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      margin-top: 0.5rem;
+    }
+
+    .btn-again {
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      margin-top: 0.5rem;
+    }
+
+    @keyframes popIn {
+      0%   { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ---- SVG region styles ---- */
+    @keyframes conflictPulse {
+      0%   { stroke: #dc2626; stroke-width: 5; }
+      100% { stroke: #64748b; stroke-width: 2; }
+    }
+
+    /* ---- Celebration burst ---- */
+    .celebration {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      opacity: 0;
+    }
+
+    @keyframes confettiFall {
+      0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(120px) rotate(360deg); }
+    }
+
+    .game-wrapper {
+      position: relative;
+    }
+
+    .puzzle-name {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      margin-bottom: 1rem;
+      font-style: italic;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -23,14 +212,486 @@
   <main>
     <a href="../index.html" class="back-link">&larr; Back to Activities</a>
 
-    <div class="activity-container">
-      <h2>Four Coloring</h2>
-      <div class="placeholder-msg">
-        <span class="icon">&#x1F3A8;</span>
-        Activity coming soon!
+    <div class="game-wrapper">
+      <div class="game-card">
+        <div class="card-indicator">
+          Card <span id="card-num">1</span> of <span id="card-total">15</span>
+        </div>
+
+        <p class="instruction">Color each section &mdash; no matching neighbors!</p>
+        <p class="puzzle-name" id="puzzle-name"></p>
+
+        <div class="puzzle-row">
+          <div class="puzzle-container">
+            <svg id="puzzle-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+          <div class="palette" id="palette"></div>
+        </div>
+
+        <div class="status" id="status"></div>
       </div>
+
+      <div class="celebration" id="celebration"></div>
     </div>
   </main>
 
+<script>
+  // ===== Constants =====
+  const COLORS = ['#ef4444', '#60a5fa', '#fbbf24', '#34d399'];
+  const REGION_DEFAULT = '#f1f5f9';
+  const REGION_STROKE = '#64748b';
+
+  // ===== State =====
+  let currentPuzzle = 0;
+  let regionColors = [];
+  let selectedColorIndex = 0;
+  let solved = false;
+
+  // ===== DOM refs =====
+  const svg = document.getElementById('puzzle-svg');
+  const paletteEl = document.getElementById('palette');
+  const cardNum = document.getElementById('card-num');
+  const cardTotal = document.getElementById('card-total');
+  const statusEl = document.getElementById('status');
+  const celebrationEl = document.getElementById('celebration');
+  const puzzleNameEl = document.getElementById('puzzle-name');
+
+  // ===== SVG path helpers =====
+  function polar(cx, cy, r, deg) {
+    const rad = deg * Math.PI / 180;
+    return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+  }
+
+  function p(x, y) {
+    return Math.round(x * 10) / 10 + ',' + Math.round(y * 10) / 10;
+  }
+
+  function sectorPath(cx, cy, r, startDeg, endDeg) {
+    const [x1, y1] = polar(cx, cy, r, startDeg);
+    const [x2, y2] = polar(cx, cy, r, endDeg);
+    const span = endDeg - startDeg;
+    const largeArc = span > 180 ? 1 : 0;
+    return 'M' + p(cx,cy) + ' L' + p(x1,y1) +
+      ' A' + r + ',' + r + ' 0 ' + largeArc + ',1 ' + p(x2,y2) + ' Z';
+  }
+
+  function circlePath(cx, cy, r) {
+    return 'M' + p(cx, cy - r) +
+      ' A' + r + ',' + r + ' 0 1,1 ' + p(cx, cy + r) +
+      ' A' + r + ',' + r + ' 0 1,1 ' + p(cx, cy - r) + ' Z';
+  }
+
+  function ringSectorPath(cx, cy, outerR, innerR, startDeg, endDeg) {
+    const [ox1, oy1] = polar(cx, cy, outerR, startDeg);
+    const [ox2, oy2] = polar(cx, cy, outerR, endDeg);
+    const [ix1, iy1] = polar(cx, cy, innerR, startDeg);
+    const [ix2, iy2] = polar(cx, cy, innerR, endDeg);
+    const span = endDeg - startDeg;
+    const largeArc = span > 180 ? 1 : 0;
+    return 'M' + p(ix1,iy1) + ' L' + p(ox1,oy1) +
+      ' A' + outerR + ',' + outerR + ' 0 ' + largeArc + ',1 ' + p(ox2,oy2) +
+      ' L' + p(ix2,iy2) +
+      ' A' + innerR + ',' + innerR + ' 0 ' + largeArc + ',0 ' + p(ix1,iy1) + ' Z';
+  }
+
+  // ===== Puzzle definitions =====
+  function buildPuzzles() {
+    var puzzles = [];
+
+    // 1. Vertical Line (2 regions, need 2, give 4)
+    puzzles.push({
+      name: 'Vertical Line',
+      numColors: 4,
+      regions: [
+        'M0,0 L150,0 L150,300 L0,300 Z',
+        'M150,0 L300,0 L300,300 L150,300 Z'
+      ],
+      adjacency: [[0,1]]
+    });
+
+    // 2. Gentle Arc (2 regions, need 2, give 4)
+    puzzles.push({
+      name: 'Gentle Arc',
+      numColors: 4,
+      regions: [
+        'M0,0 L300,0 L300,100 Q150,60 0,200 Z',
+        'M0,200 Q150,60 300,100 L300,300 L0,300 Z'
+      ],
+      adjacency: [[0,1]]
+    });
+
+    // 3. Circle (2 regions, need 2, give 4)
+    puzzles.push({
+      name: 'Circle',
+      numColors: 4,
+      regions: [
+        circlePath(150, 150, 90),
+        'M0,0 L300,0 L300,300 L0,300 Z ' + circlePath(150, 150, 90)
+      ],
+      adjacency: [[0,1]]
+    });
+
+    // 4. Three Stripes (3 regions, need 2, give 4)
+    puzzles.push({
+      name: 'Three Stripes',
+      numColors: 4,
+      regions: [
+        'M0,0 L300,0 L300,100 L0,100 Z',
+        'M0,100 L300,100 L300,200 L0,200 Z',
+        'M0,200 L300,200 L300,300 L0,300 Z'
+      ],
+      adjacency: [[0,1],[1,2]]
+    });
+
+    // 5. Cross (4 regions, need 2, give 4)
+    puzzles.push({
+      name: 'Cross',
+      numColors: 4,
+      regions: [
+        'M0,0 L150,0 L150,150 L0,150 Z',
+        'M150,0 L300,0 L300,150 L150,150 Z',
+        'M0,150 L150,150 L150,300 L0,300 Z',
+        'M150,150 L300,150 L300,300 L150,300 Z'
+      ],
+      adjacency: [[0,1],[0,2],[1,3],[2,3]]
+    });
+
+    // 6. X-Diagonals (4 regions, need 2, give 4)
+    puzzles.push({
+      name: 'X-Diagonals',
+      numColors: 4,
+      regions: [
+        'M0,0 L300,0 L150,150 Z',
+        'M300,0 L300,300 L150,150 Z',
+        'M300,300 L0,300 L150,150 Z',
+        'M0,300 L0,0 L150,150 Z'
+      ],
+      adjacency: [[0,1],[1,2],[2,3],[3,0]]
+    });
+
+    // 7. Concentric Circles (3 regions, need 2, give 4)
+    var outerR = 120, innerR = 55;
+    puzzles.push({
+      name: 'Concentric Circles',
+      numColors: 4,
+      regions: [
+        circlePath(150, 150, innerR),
+        circlePath(150, 150, outerR) + ' ' + circlePath(150, 150, innerR),
+        'M0,0 L300,0 L300,300 L0,300 Z ' + circlePath(150, 150, outerR)
+      ],
+      adjacency: [[0,1],[1,2]]
+    });
+
+    // 8. Two-by-Three Grid (6 regions, need 2, give 4)
+    puzzles.push({
+      name: '2 \u00d7 3 Grid',
+      numColors: 4,
+      regions: [
+        'M0,0 L100,0 L100,150 L0,150 Z',
+        'M100,0 L200,0 L200,150 L100,150 Z',
+        'M200,0 L300,0 L300,150 L200,150 Z',
+        'M0,150 L100,150 L100,300 L0,300 Z',
+        'M100,150 L200,150 L200,300 L100,300 Z',
+        'M200,150 L300,150 L300,300 L200,300 Z'
+      ],
+      adjacency: [[0,1],[1,2],[3,4],[4,5],[0,3],[1,4],[2,5]]
+    });
+
+    // 9. Circle + Diameter (3 regions, need 3, give 4)
+    var cr = 100;
+    puzzles.push({
+      name: 'Circle with Diameter',
+      numColors: 4,
+      regions: [
+        'M150,50 A100,100 0 0,0 150,250 Z',
+        'M150,50 A100,100 0 0,1 150,250 Z',
+        'M0,0 L300,0 L300,300 L0,300 Z ' + circlePath(150, 150, cr)
+      ],
+      adjacency: [[0,1],[0,2],[1,2]]
+    });
+
+    // 10. Line + Triangle (3 regions, need 3, give 4)
+    puzzles.push({
+      name: 'Line and Triangle',
+      numColors: 4,
+      regions: [
+        'M150,30 L260,170 L40,170 Z',
+        'M0,0 L300,0 L300,170 L260,170 L150,30 L40,170 L0,170 Z',
+        'M0,170 L300,170 L300,300 L0,300 Z'
+      ],
+      adjacency: [[0,1],[0,2],[1,2]]
+    });
+
+    // 11. Y-Shape / 3 Sectors (3 regions, need 3, give 3)
+    (function() {
+      var angles = [-90, 30, 150];
+      var regions = [];
+      for (var i = 0; i < 3; i++) {
+        regions.push(sectorPath(150, 150, 130, angles[i], angles[(i+1) % 3] < angles[i] ? angles[(i+1) % 3] + 360 : angles[(i+1) % 3]));
+      }
+      puzzles.push({
+        name: 'Y-Shape',
+        numColors: 3,
+        regions: regions,
+        adjacency: [[0,1],[1,2],[2,0]]
+      });
+    })();
+
+    // 12. Wheel-4: Cross + Center Circle (5 regions, need 3, give 3)
+    (function() {
+      var cr2 = 50;
+      var regions = [];
+      // Center circle
+      regions.push(circlePath(150, 150, cr2));
+      // Top-left quadrant minus quarter circle
+      regions.push('M0,0 L150,0 L150,100 A50,50 0 0,0 100,150 L0,150 Z');
+      // Top-right
+      regions.push('M150,0 L300,0 L300,150 L200,150 A50,50 0 0,0 150,100 Z');
+      // Bottom-right
+      regions.push('M300,150 L300,300 L150,300 L150,200 A50,50 0 0,0 200,150 Z');
+      // Bottom-left
+      regions.push('M0,150 L100,150 A50,50 0 0,0 150,200 L150,300 L0,300 Z');
+      puzzles.push({
+        name: 'Wheel',
+        numColors: 3,
+        regions: regions,
+        adjacency: [[0,1],[0,2],[0,3],[0,4],[1,2],[2,3],[3,4],[4,1]]
+      });
+    })();
+
+    // 13. Five Pie Slices (5 regions, need 3, give 3)
+    (function() {
+      var regions = [];
+      for (var i = 0; i < 5; i++) {
+        var startDeg = -90 + i * 72;
+        var endDeg = -90 + (i + 1) * 72;
+        regions.push(sectorPath(150, 150, 130, startDeg, endDeg));
+      }
+      var adj = [];
+      for (var i = 0; i < 5; i++) {
+        adj.push([i, (i + 1) % 5]);
+      }
+      puzzles.push({
+        name: 'Five Slices',
+        numColors: 3,
+        regions: regions,
+        adjacency: adj
+      });
+    })();
+
+    // 14. Seven Pie Slices (7 regions, need 3, give 3)
+    (function() {
+      var regions = [];
+      var step = 360 / 7;
+      for (var i = 0; i < 7; i++) {
+        var startDeg = -90 + i * step;
+        var endDeg = -90 + (i + 1) * step;
+        regions.push(sectorPath(150, 150, 130, startDeg, endDeg));
+      }
+      var adj = [];
+      for (var i = 0; i < 7; i++) {
+        adj.push([i, (i + 1) % 7]);
+      }
+      puzzles.push({
+        name: 'Seven Slices',
+        numColors: 3,
+        regions: regions,
+        adjacency: adj
+      });
+    })();
+
+    // 15. Wheel-5: 5 Radials + Center Circle (6 regions, need 4, give 4)
+    (function() {
+      var outerR = 130, innerR2 = 40;
+      var regions = [];
+      // Center circle
+      regions.push(circlePath(150, 150, innerR2));
+      // 5 ring sectors
+      for (var i = 0; i < 5; i++) {
+        var startDeg = -90 + i * 72;
+        var endDeg = -90 + (i + 1) * 72;
+        regions.push(ringSectorPath(150, 150, outerR, innerR2, startDeg, endDeg));
+      }
+      var adj = [];
+      // Center adjacent to all 5 sectors
+      for (var i = 1; i <= 5; i++) {
+        adj.push([0, i]);
+      }
+      // Sectors adjacent in cycle
+      for (var i = 1; i <= 5; i++) {
+        var next = i < 5 ? i + 1 : 1;
+        adj.push([i, next]);
+      }
+      puzzles.push({
+        name: 'Star Wheel',
+        numColors: 4,
+        regions: regions,
+        adjacency: adj
+      });
+    })();
+
+    return puzzles;
+  }
+
+  var PUZZLES = buildPuzzles();
+
+  // ===== Render =====
+  function loadPuzzle(index) {
+    var puzzle = PUZZLES[index];
+    solved = false;
+    regionColors = new Array(puzzle.regions.length).fill(null);
+
+    svg.innerHTML = '';
+
+    puzzle.regions.forEach(function(d, i) {
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('fill', REGION_DEFAULT);
+      path.setAttribute('stroke', REGION_STROKE);
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('fill-rule', 'evenodd');
+      path.setAttribute('data-index', i);
+      path.style.cursor = 'pointer';
+      path.style.transition = 'fill 0.15s';
+      path.addEventListener('click', function() { paintRegion(i); });
+      svg.appendChild(path);
+    });
+
+    renderPalette(puzzle.numColors);
+    cardNum.textContent = index + 1;
+    cardTotal.textContent = PUZZLES.length;
+    puzzleNameEl.textContent = puzzle.name;
+    statusEl.classList.remove('visible');
+    statusEl.innerHTML = '';
+  }
+
+  function renderPalette(numColors) {
+    paletteEl.innerHTML = '';
+    if (selectedColorIndex >= numColors) {
+      selectedColorIndex = 0;
+    }
+    for (var i = 0; i < numColors; i++) {
+      var swatch = document.createElement('button');
+      swatch.className = 'swatch' + (i === selectedColorIndex ? ' selected' : '');
+      swatch.style.background = COLORS[i];
+      swatch.setAttribute('aria-label', 'Color ' + (i + 1));
+      (function(idx) {
+        swatch.addEventListener('click', function() { selectColor(idx); });
+      })(i);
+      paletteEl.appendChild(swatch);
+    }
+  }
+
+  function selectColor(index) {
+    selectedColorIndex = index;
+    var swatches = document.querySelectorAll('.swatch');
+    swatches.forEach(function(s, i) {
+      s.classList.toggle('selected', i === index);
+    });
+  }
+
+  // ===== Game logic =====
+  function paintRegion(index) {
+    if (solved) return;
+
+    regionColors[index] = selectedColorIndex;
+
+    var paths = svg.querySelectorAll('path');
+    paths[index].setAttribute('fill', COLORS[selectedColorIndex]);
+
+    // Check for conflicts with neighbors
+    var puzzle = PUZZLES[currentPuzzle];
+    var conflicts = [];
+    for (var e = 0; e < puzzle.adjacency.length; e++) {
+      var a = puzzle.adjacency[e][0];
+      var b = puzzle.adjacency[e][1];
+      if (a === index && regionColors[b] !== null && regionColors[b] === regionColors[index]) {
+        conflicts.push(b);
+      }
+      if (b === index && regionColors[a] !== null && regionColors[a] === regionColors[index]) {
+        conflicts.push(a);
+      }
+    }
+
+    if (conflicts.length > 0) {
+      flashConflict(paths[index]);
+      conflicts.forEach(function(ci) {
+        flashConflict(paths[ci]);
+      });
+    }
+
+    // Check completion
+    if (regionColors.every(function(c) { return c !== null; })) {
+      var valid = true;
+      for (var e = 0; e < puzzle.adjacency.length; e++) {
+        if (regionColors[puzzle.adjacency[e][0]] === regionColors[puzzle.adjacency[e][1]]) {
+          valid = false;
+          break;
+        }
+      }
+      if (valid) {
+        solved = true;
+        showSuccess();
+      }
+    }
+  }
+
+  function flashConflict(pathEl) {
+    pathEl.style.stroke = '#dc2626';
+    pathEl.style.strokeWidth = '5';
+    setTimeout(function() {
+      pathEl.style.stroke = REGION_STROKE;
+      pathEl.style.strokeWidth = '2';
+    }, 500);
+  }
+
+  function showSuccess() {
+    showConfetti();
+    if (currentPuzzle < PUZZLES.length - 1) {
+      statusEl.innerHTML =
+        '<p class="success-msg">\u{1F389} Great job!</p>' +
+        '<button class="btn btn-next" onclick="nextPuzzle()">Next Card \u2192</button>';
+    } else {
+      statusEl.innerHTML =
+        '<p class="success-msg">\u{1F389} Amazing!</p>' +
+        '<p class="finish-msg">You finished all the cards!</p>' +
+        '<button class="btn btn-again" onclick="restartAll()">Play Again</button>';
+    }
+    statusEl.classList.add('visible');
+  }
+
+  function nextPuzzle() {
+    currentPuzzle++;
+    loadPuzzle(currentPuzzle);
+  }
+
+  function resetPuzzle() {
+    loadPuzzle(currentPuzzle);
+  }
+
+  function restartAll() {
+    currentPuzzle = 0;
+    selectedColorIndex = 0;
+    loadPuzzle(0);
+  }
+
+  // ===== Confetti =====
+  function showConfetti() {
+    celebrationEl.innerHTML = '';
+    var colors = ['#7c3aed', '#4c6ef5', '#10b981', '#f59e0b', '#ec4899', '#34d399'];
+    for (var i = 0; i < 20; i++) {
+      var dot = document.createElement('div');
+      dot.className = 'confetti';
+      dot.style.left = Math.random() * 100 + '%';
+      dot.style.top = Math.random() * 40 + '%';
+      dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+      dot.style.animation = 'confettiFall 0.8s ' + (Math.random() * 0.3) + 's ease-out forwards';
+      celebrationEl.appendChild(dot);
+    }
+  }
+
+  // ===== Start =====
+  loadPuzzle(0);
+</script>
 </body>
 </html>
