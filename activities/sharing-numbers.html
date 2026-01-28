@@ -159,15 +159,9 @@
       margin-top: 0.75rem;
     }
 
-    .dismiss-hint {
-      font-size: 0.85rem;
-      color: #94a3b8;
-      margin-top: 0.75rem;
-      cursor: pointer;
-    }
-
-    .game-card.clickable {
-      cursor: pointer;
+    .btn-next {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      margin-top: 1rem;
     }
 
     @keyframes popIn {
@@ -213,7 +207,7 @@
     </div>
 
     <div class="game-wrapper">
-      <div class="game-card" onclick="dismissCorrect()">
+      <div class="game-card">
         <h2 class="activity-title">Sharing Numbers</h2>
         <div class="score-bar">
           <span>Round: <span class="round-value" id="round">1</span></span>
@@ -232,7 +226,7 @@
 
           <div class="feedback" id="feedback-correct">
             <p class="feedback-correct" id="correct-msg"></p>
-            <p class="dismiss-hint">Click to continue</p>
+            <button class="btn btn-next" onclick="event.stopPropagation(); goNextRound()">Next Round</button>
           </div>
 
           <div class="feedback feedback-wrong" id="feedback-wrong">
@@ -253,10 +247,8 @@
   let round = 1;
   let currentNumber = 0;
   let awaitingNext = false;
-  let advanceTimer = null;
   let highScore = parseInt(localStorage.getItem("sharingNumbers_highScore")) || 0;
 
-  const gameCard = document.querySelector(".game-card");
   const numberBubble = document.getElementById("number-bubble");
   const scoreEl = document.getElementById("score");
   const roundEl = document.getElementById("round");
@@ -366,15 +358,7 @@
       }
 
       feedbackCorrect.classList.add("visible");
-      gameCard.classList.add("clickable");
       showConfetti();
-
-      advanceTimer = setTimeout(() => {
-        advanceTimer = null;
-        gameCard.classList.remove("clickable");
-        round++;
-        nextRound();
-      }, 3500);
     } else {
       awaitingNext = true;
       choicesEl.style.display = "none";
@@ -402,11 +386,8 @@
     }
   }
 
-  function dismissCorrect() {
-    if (!advanceTimer) return;
-    clearTimeout(advanceTimer);
-    advanceTimer = null;
-    gameCard.classList.remove("clickable");
+  function goNextRound() {
+    if (!awaitingNext) return;
     round++;
     nextRound();
   }

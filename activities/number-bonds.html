@@ -270,15 +270,9 @@
       margin-top: 0.75rem;
     }
 
-    .dismiss-hint {
-      font-size: 0.85rem;
-      color: #94a3b8;
-      margin-top: 0.75rem;
-      cursor: pointer;
-    }
-
-    .game-card.clickable {
-      cursor: pointer;
+    .btn-next {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      margin-top: 1rem;
     }
 
     @keyframes popIn {
@@ -323,7 +317,7 @@
     </div>
 
     <div class="game-wrapper">
-      <div class="game-card" id="game-card" onclick="dismissCorrect()">
+      <div class="game-card" id="game-card">
         <h2 class="activity-title">Number Bonds</h2>
         <div class="score-bar">
           <span>Round: <span class="round-value" id="round">1</span></span>
@@ -361,7 +355,7 @@
 
           <div class="feedback" id="feedback-correct">
             <p class="feedback-correct" id="correct-msg"></p>
-            <p class="dismiss-hint">Click to continue</p>
+            <button class="btn btn-next" onclick="event.stopPropagation(); goNextRound()">Next Round</button>
           </div>
 
           <div class="feedback feedback-wrong" id="feedback-wrong">
@@ -383,7 +377,6 @@
   let round = 1;
   let awaitingNext = false;
   let gameOver = false;
-  let advanceTimer = null;
   let highScore = parseInt(localStorage.getItem("numberBonds_highScore")) || 0;
 
   let currentTotal = 0;
@@ -543,15 +536,7 @@
       numpadEl.style.visibility = "hidden";
       correctMsg.textContent = currentPartA + " + " + currentPartB + " = " + currentTotal;
       feedbackCorrect.classList.add("visible");
-      gameCard.classList.add("clickable");
       showConfetti();
-
-      advanceTimer = setTimeout(function() {
-        advanceTimer = null;
-        gameCard.classList.remove("clickable");
-        round++;
-        nextRound();
-      }, 3500);
     } else {
       // Wrong — game over
       gameOver = true;
@@ -578,12 +563,8 @@
 
   // ===== Keyboard input =====
   document.addEventListener("keydown", function(e) {
-    if (awaitingNext && !gameOver && e.key === " ") {
-      dismissCorrect();
-      return;
-    }
-    if (awaitingNext && !gameOver && e.key === "Enter") {
-      dismissCorrect();
+    if (awaitingNext && !gameOver && (e.key === " " || e.key === "Enter")) {
+      goNextRound();
       return;
     }
     if (e.key >= "0" && e.key <= "9") {
@@ -609,11 +590,8 @@
     feedbackWrong.classList.remove("visible");
   }
 
-  function dismissCorrect() {
-    if (!advanceTimer) return;
-    clearTimeout(advanceTimer);
-    advanceTimer = null;
-    gameCard.classList.remove("clickable");
+  function goNextRound() {
+    if (!awaitingNext || gameOver) return;
     round++;
     nextRound();
   }
