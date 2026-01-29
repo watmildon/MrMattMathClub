@@ -23,43 +23,46 @@
     .score-bar {
       display: flex;
       justify-content: space-between;
-      align-items: center;
       margin-bottom: 1.5rem;
-      font-size: 1.05rem;
-      color: #64748b;
     }
 
-    .score-bar > span {
+    .score-item {
       flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.15rem;
     }
 
-    .score-bar > span:nth-child(2) {
-      text-align: center;
-    }
-
-    .score-bar > span:last-child {
-      text-align: right;
-    }
-
-    .score-bar .score-value {
-      font-weight: 700;
-      color: #4c6ef5;
-      font-size: 1.2rem;
-      transition: color 0.3s;
-    }
-
-    .score-bar .score-value.score-bump {
-      color: #10b981;
+    .score-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
     .score-bar .round-value {
-      font-weight: 600;
+      font-weight: 700;
+      font-size: 1.3rem;
       color: #7c3aed;
     }
 
     .score-bar .high-score-value {
       font-weight: 700;
+      font-size: 1.3rem;
       color: #f59e0b;
+    }
+
+    .score-bar .score-value {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #4c6ef5;
+      transition: color 0.3s;
+    }
+
+    .score-bar .score-value.score-bump {
+      color: #10b981;
     }
 
     /* ---- Bond layout ---- */
@@ -337,9 +340,9 @@
       <div class="game-card" id="game-card">
         <h2 class="activity-title">Number Bonds</h2>
         <div class="score-bar">
-          <span>Round: <span class="round-value" id="round">1</span></span>
-          <span>Best: <span class="high-score-value" id="high-score">0</span></span>
-          <span>Score: <span class="score-value" id="score">0</span></span>
+          <div class="score-item"><span class="score-label">Round</span><span class="round-value" id="round">1</span></div>
+          <div class="score-item"><span class="score-label">Best</span><span class="high-score-value" id="high-score">0</span></div>
+          <div class="score-item"><span class="score-label">Score</span><span class="score-value" id="score">0</span></div>
         </div>
 
         <div id="game-area">
