@@ -81,6 +81,7 @@ main {
 .card p {
   font-size: 0.95rem;
   color: #64748b;
+  text-wrap: balance;
 }
 
 /* Card accent colors */
