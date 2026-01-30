@@ -65,43 +65,57 @@ var FourColorEngine = (function() {
     var pathB = paths[b];
     var lenA = pathA.getTotalLength();
     var lenB = pathB.getTotalLength();
-    var N = 60;
-    var threshold = 4;
-    var shared = [];
+    var N = 200;
+    var threshold = 5;
 
+    // Collect the best matching point on B for each sample on A
+    // This gives us one point per A-sample, ordered along A's perimeter
+    var borderPoints = [];
     for (var i = 0; i <= N; i++) {
       var ptA = pathA.getPointAtLength(lenA * i / N);
+      var bestDist = Infinity;
+      var bestPt = null;
       for (var j = 0; j <= N; j++) {
         var ptB = pathB.getPointAtLength(lenB * j / N);
         var dx = ptA.x - ptB.x, dy = ptA.y - ptB.y;
-        if (dx * dx + dy * dy < threshold * threshold) {
-          shared.push({ x: (ptA.x + ptB.x) / 2, y: (ptA.y + ptB.y) / 2 });
+        var dist = dx * dx + dy * dy;
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestPt = ptB;
         }
+      }
+      if (bestDist < threshold * threshold) {
+        borderPoints.push({ x: (ptA.x + bestPt.x) / 2, y: (ptA.y + bestPt.y) / 2 });
       }
     }
 
-    if (shared.length === 0) {
+    if (borderPoints.length === 0) {
       var bA = pathA.getBBox(), bB = pathB.getBBox();
       return { x: (bA.x + bA.width / 2 + bB.x + bB.width / 2) / 2,
                y: (bA.y + bA.height / 2 + bB.y + bB.height / 2) / 2 };
     }
 
-    var sx = 0, sy = 0;
-    for (var i = 0; i < shared.length; i++) { sx += shared[i].x; sy += shared[i].y; }
-    var cx = sx / shared.length;
-    var cy = sy / shared.length;
-
-    var minDist = Infinity;
-    var closest = shared[0];
-    for (var i = 0; i < shared.length; i++) {
-      var dx = shared[i].x - cx, dy = shared[i].y - cy;
-      var d = dx * dx + dy * dy;
-      if (d < minDist) { minDist = d; closest = shared[i]; }
+    // Find the longest contiguous run of border points (handles
+    // borders that may have gaps, e.g. states sharing two separate segments)
+    var bestStart = 0, bestLen = 1, curStart = 0, curLen = 1;
+    for (var i = 1; i < borderPoints.length; i++) {
+      var dx = borderPoints[i].x - borderPoints[i - 1].x;
+      var dy = borderPoints[i].y - borderPoints[i - 1].y;
+      if (dx * dx + dy * dy < 40 * 40) {
+        curLen++;
+      } else {
+        curStart = i;
+        curLen = 1;
+      }
+      if (curLen > bestLen) {
+        bestStart = curStart;
+        bestLen = curLen;
+      }
     }
 
-    if (Math.sqrt(minDist) > 15) return closest;
-
-    return { x: cx, y: cy };
+    // Return the midpoint of the longest shared border segment
+    var midIdx = bestStart + Math.floor(bestLen / 2);
+    return borderPoints[midIdx];
   }
 
   function getBorderMidpoint(cache, svgEl, a, b) {
