@@ -43,6 +43,12 @@
         <p>Discover the pairs that make up a number.</p>
       </a>
 
+      <a href="activities/dice-bingo.html" class="card dice-bingo">
+        <span class="icon">&#x1F3B2;</span>
+        <h2>Dice Bingo</h2>
+        <p>Fill a bingo card and see how many rolls to win!</p>
+      </a>
+
       <a href="activities/sharing-numbers.html" class="card sharing-numbers">
         <span class="icon">&#xF7;</span>
         <h2>Sharing Numbers</h2>
@@ -183,6 +189,64 @@
       } catch(e) {}
     }
   });
+
+  // Dice Bingo medal count
+  (function() {
+    var diceBingoCard = document.querySelector('.dice-bingo');
+    if (!diceBingoCard) return;
+
+    var CHALLENGES = [
+      [4, 4], [4, 6], [6, 6], [6, 8], [8, 8],
+      [6, 10], [10, 10], [6, 12], [12, 12], [6, 20], [20, 20]
+    ];
+    var TARGETS = {
+      '4,4':  { gold: 15, silver: 17, bronze: 19 },
+      '4,6':  { gold: 17, silver: 19, bronze: 21 },
+      '6,6':  { gold: 19, silver: 21, bronze: 24 },
+      '6,8':  { gold: 21, silver: 23, bronze: 27 },
+      '8,8':  { gold: 23, silver: 26, bronze: 30 },
+      '6,10': { gold: 22, silver: 25, bronze: 29 },
+      '10,10': { gold: 26, silver: 30, bronze: 35 },
+      '6,12': { gold: 23, silver: 27, bronze: 31 },
+      '12,12': { gold: 30, silver: 34, bronze: 40 },
+      '6,20': { gold: 28, silver: 33, bronze: 39 },
+      '20,20': { gold: 44, silver: 50, bronze: 58 }
+    };
+
+    function getDiceKey(d1, d2) {
+      return [Math.min(d1, d2), Math.max(d1, d2)].join(',');
+    }
+
+    var medals = { gold: 0, silver: 0, bronze: 0 };
+    CHALLENGES.forEach(function(pair) {
+      var key = 'diceBingo_best_' + getDiceKey(pair[0], pair[1]);
+      var best = localStorage.getItem(key);
+      if (best !== null) {
+        var t = TARGETS[getDiceKey(pair[0], pair[1])];
+        var score = parseFloat(best);
+        if (score <= t.gold) medals.gold++;
+        else if (score <= t.silver) medals.silver++;
+        else if (score <= t.bronze) medals.bronze++;
+      }
+    });
+
+    var total = medals.gold + medals.silver + medals.bronze;
+    if (total > 0) {
+      var badge = document.createElement('span');
+      if (medals.gold === CHALLENGES.length) {
+        badge.className = 'card-badge trophy-gold';
+        badge.innerHTML = trophySvg('#d97706') + 'All gold!';
+      } else {
+        badge.className = 'card-badge high-score';
+        var parts = [];
+        if (medals.gold > 0) parts.push('🥇' + medals.gold);
+        if (medals.silver > 0) parts.push('🥈' + medals.silver);
+        if (medals.bronze > 0) parts.push('🥉' + medals.bronze);
+        badge.textContent = parts.join(' ');
+      }
+      diceBingoCard.appendChild(badge);
+    }
+  })();
 </script>
 </body>
 </html>

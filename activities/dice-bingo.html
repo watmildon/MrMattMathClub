@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dice Bingo - Mr. Matt Math Club</title>
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    .back-row {
+      max-width: 600px;
+    }
+
+    .game-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem 1.5rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .instruction {
+      font-size: 1.1rem;
+      color: #64748b;
+      margin-bottom: 1rem;
+    }
+
+    .dice-info {
+      font-size: 0.9rem;
+      color: #64748b;
+      margin-bottom: 0.5rem;
+    }
+
+    .dice-info strong {
+      color: #7c3aed;
+    }
+
+    /* Target display */
+    .target-display {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .target-box {
+      text-align: center;
+    }
+
+    .target-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .target-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    .target-medal {
+      white-space: nowrap;
+    }
+
+    .target-medal.gold { color: #f59e0b; }
+    .target-medal.silver { color: #94a3b8; }
+    .target-medal.bronze { color: #b45309; }
+
+    .best-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #7c3aed;
+    }
+
+    .best-value.medal-gold { color: #f59e0b; }
+    .best-value.medal-silver { color: #94a3b8; }
+    .best-value.medal-bronze { color: #b45309; }
+
+    .trophy-earned {
+      font-size: 1.2rem;
+      margin-left: 0.25rem;
+    }
+
+    .result-main.medal-gold { color: #f59e0b; }
+    .result-main.medal-silver { color: #94a3b8; }
+    .result-main.medal-bronze { color: #b45309; }
+
+    /* Trophy shelf */
+    .trophy-shelf {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .trophy-shelf-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.75rem;
+    }
+
+    .trophy-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .trophy-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      background: white;
+      border: 2px solid #e2e8f0;
+      min-width: 70px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .trophy-item:hover {
+      border-color: #7c3aed;
+      transform: translateY(-2px);
+    }
+
+    .trophy-item.selected {
+      border-color: #7c3aed;
+      border-width: 3px;
+      background: #f5f3ff;
+    }
+
+    .trophy-item.earned.medal-gold {
+      border-color: #f59e0b;
+      background: #fef3c7;
+    }
+
+    .trophy-item.earned.medal-silver {
+      border-color: #94a3b8;
+      background: #f1f5f9;
+    }
+
+    .trophy-item.earned.medal-bronze {
+      border-color: #b45309;
+      background: #fef3c7;
+    }
+
+    .trophy-item.earned.selected {
+      border-color: #7c3aed;
+      border-width: 3px;
+    }
+
+    .trophy-icon {
+      font-size: 1.25rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .trophy-dice {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    /* Bingo grid */
+    .bingo-header {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      max-width: 320px;
+      margin: 0 auto 4px;
+    }
+
+    .bingo-letter {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #7c3aed;
+      text-align: center;
+    }
+
+    .bingo-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      max-width: 320px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .bingo-cell {
+      aspect-ratio: 1;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 600;
+      background: white;
+      transition: all 0.15s;
+    }
+
+    .bingo-cell input {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: transparent;
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1e293b;
+      outline: none;
+    }
+
+    .bingo-cell input:focus {
+      background: #f1f5f9;
+    }
+
+    .bingo-cell input::placeholder {
+      color: #cbd5e1;
+    }
+
+    .bingo-cell.free {
+      background: #f1f5f9;
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .bingo-cell.marked {
+      background: #7c3aed;
+      border-color: #7c3aed;
+    }
+
+    .bingo-cell.marked input {
+      color: white;
+    }
+
+    .bingo-cell.winner {
+      background: #10b981;
+      border-color: #10b981;
+      animation: pulse 0.5s ease;
+    }
+
+    .bingo-cell.winner input {
+      color: white;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* Buttons */
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-simulate {
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+    }
+
+    .btn-clear {
+      background: #64748b;
+      margin-left: 0.5rem;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Results */
+    .results {
+      display: none;
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      background: #f8fafc;
+      border-radius: 12px;
+    }
+
+    .results.visible {
+      display: block;
+    }
+
+    .result-main {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 0.5rem;
+    }
+
+    .result-main.success {
+      color: #10b981;
+    }
+
+    .result-label {
+      font-size: 1rem;
+      color: #64748b;
+      margin-bottom: 0.5rem;
+    }
+
+    .result-status {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .result-status.success {
+      color: #10b981;
+    }
+
+    .result-status.try-again {
+      color: #f59e0b;
+    }
+
+    .result-details {
+      font-size: 0.9rem;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    .result-details strong {
+      color: #1e293b;
+    }
+
+    /* Progress bar for simulation */
+    .sim-progress {
+      display: none;
+      margin: 1rem 0;
+    }
+
+    .sim-progress.visible {
+      display: block;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      width: 0%;
+      transition: width 0.1s;
+    }
+
+    .progress-text {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: 0.5rem;
+    }
+
+    /* Celebration */
+    .celebration {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      z-index: 100;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      opacity: 0;
+    }
+
+    @keyframes confettiFall {
+      0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(400px) rotate(720deg); }
+    }
+  </style>
+</head>
+<body>
+  <header><h1>Mr. Matt Math Club</h1></header>
+  <main>
+    <div class="back-row">
+      <a href="../index.html" class="back-btn" aria-label="Back to Activities">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 10H5M5 10l5-5M5 10l5 5"/>
+        </svg>
+      </a>
+    </div>
+
+    <div class="game-card">
+      <h2 class="activity-title">Dice Bingo</h2>
+      <p class="instruction">Fill your bingo card to get bingo in fewer rolls than the target!</p>
+
+      <div class="trophy-shelf">
+        <div class="trophy-shelf-label">Challenges</div>
+        <div class="trophy-grid" id="trophy-grid">
+          <!-- Generated by JS -->
+        </div>
+        <div class="target-display">
+          <div class="target-box">
+            <div class="target-label">Target</div>
+            <div class="target-value" id="target-value">17</div>
+          </div>
+          <div class="target-box">
+            <div class="target-label">Your Best</div>
+            <div class="best-value" id="best-value">--<span class="trophy-earned" id="trophy-indicator"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bingo-header">
+        <span class="bingo-letter">B</span>
+        <span class="bingo-letter">I</span>
+        <span class="bingo-letter">N</span>
+        <span class="bingo-letter">G</span>
+        <span class="bingo-letter">O</span>
+      </div>
+
+      <div class="bingo-grid" id="bingo-grid">
+        <!-- 25 cells generated by JS -->
+      </div>
+
+      <p class="dice-info">Valid sums: <strong id="valid-range">2 - 12</strong></p>
+
+      <div class="button-row">
+        <button class="btn btn-simulate" id="btn-simulate">Test My Card!</button>
+        <button class="btn btn-clear" id="btn-clear">Clear</button>
+      </div>
+
+      <div class="sim-progress" id="sim-progress">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-text" id="progress-text">Simulating...</p>
+      </div>
+
+      <div class="results" id="results">
+        <div class="result-main" id="result-avg"></div>
+        <div class="result-label">average rolls to bingo</div>
+        <div class="result-status" id="result-status"></div>
+        <div class="result-details" id="result-details"></div>
+      </div>
+    </div>
+
+    <div class="celebration" id="celebration"></div>
+  </main>
+
+  <script>
+    (function() {
+      var FREE_CELL = 12; // center cell (index 12 in 5x5 grid)
+      var NUM_SIMULATIONS = 10000;
+      var WINNING_LINES = [
+        // Rows
+        [0, 1, 2, 3, 4],
+        [5, 6, 7, 8, 9],
+        [10, 11, 12, 13, 14],
+        [15, 16, 17, 18, 19],
+        [20, 21, 22, 23, 24],
+        // Columns
+        [0, 5, 10, 15, 20],
+        [1, 6, 11, 16, 21],
+        [2, 7, 12, 17, 22],
+        [3, 8, 13, 18, 23],
+        [4, 9, 14, 19, 24],
+        // Diagonals
+        [0, 6, 12, 18, 24],
+        [4, 8, 12, 16, 20]
+      ];
+
+      // Target scores for each dice pair (key: "d1,d2" sorted)
+      // Bronze: easy (75th percentile of random cards)
+      // Silver: medium (50th percentile)
+      // Gold: hard (requires good strategy, ~25th percentile)
+      var TARGETS = {
+        '4,4':  { gold: 15, silver: 17, bronze: 19 },
+        '4,6':  { gold: 17, silver: 19, bronze: 21 },
+        '4,8':  { gold: 18, silver: 20, bronze: 23 },
+        '4,10': { gold: 19, silver: 22, bronze: 25 },
+        '4,12': { gold: 20, silver: 23, bronze: 27 },
+        '4,20': { gold: 24, silver: 28, bronze: 33 },
+        '6,6':  { gold: 19, silver: 21, bronze: 24 },
+        '6,8':  { gold: 21, silver: 23, bronze: 27 },
+        '6,10': { gold: 22, silver: 25, bronze: 29 },
+        '6,12': { gold: 23, silver: 27, bronze: 31 },
+        '6,20': { gold: 28, silver: 33, bronze: 39 },
+        '8,8':  { gold: 23, silver: 26, bronze: 30 },
+        '8,10': { gold: 24, silver: 27, bronze: 32 },
+        '8,12': { gold: 25, silver: 29, bronze: 34 },
+        '8,20': { gold: 30, silver: 35, bronze: 41 },
+        '10,10': { gold: 26, silver: 30, bronze: 35 },
+        '10,12': { gold: 27, silver: 31, bronze: 36 },
+        '10,20': { gold: 32, silver: 37, bronze: 44 },
+        '12,12': { gold: 30, silver: 34, bronze: 40 },
+        '12,20': { gold: 35, silver: 40, bronze: 47 },
+        '20,20': { gold: 44, silver: 50, bronze: 58 }
+      };
+
+      // Challenges to display (subset of interesting combinations)
+      var CHALLENGES = [
+        [4, 4], [4, 6], [6, 6], [6, 8], [8, 8],
+        [6, 10], [10, 10], [6, 12], [12, 12], [6, 20], [20, 20]
+      ];
+
+      var validRangeEl = document.getElementById('valid-range');
+      var targetValueEl = document.getElementById('target-value');
+      var bestValueEl = document.getElementById('best-value');
+      var trophyIndicatorEl = document.getElementById('trophy-indicator');
+      var trophyGridEl = document.getElementById('trophy-grid');
+      var gridEl = document.getElementById('bingo-grid');
+      var btnSimulate = document.getElementById('btn-simulate');
+      var btnClear = document.getElementById('btn-clear');
+      var resultsEl = document.getElementById('results');
+      var resultAvgEl = document.getElementById('result-avg');
+      var resultStatusEl = document.getElementById('result-status');
+      var resultDetailsEl = document.getElementById('result-details');
+      var simProgressEl = document.getElementById('sim-progress');
+      var progressFillEl = document.getElementById('progress-fill');
+      var progressTextEl = document.getElementById('progress-text');
+      var celebrationEl = document.getElementById('celebration');
+
+      var cells = [];
+      var currentDice = { d1: 6, d2: 6 }; // Default to 2d6
+
+      function getDiceKey(d1, d2) {
+        return [Math.min(d1, d2), Math.max(d1, d2)].join(',');
+      }
+
+      function getDice() {
+        return currentDice;
+      }
+
+      function setDice(d1, d2) {
+        currentDice = { d1: d1, d2: d2 };
+        onDiceChange();
+      }
+
+      function getValidRange() {
+        var dice = getDice();
+        return { min: 2, max: dice.d1 + dice.d2 };
+      }
+
+      function getTargets(d1, d2) {
+        var key = getDiceKey(d1, d2);
+        return TARGETS[key] || { gold: 20, silver: 25, bronze: 30 };
+      }
+
+      function getStorageKey(d1, d2) {
+        return 'diceBingo_best_' + getDiceKey(d1, d2);
+      }
+
+      function getBestScore(d1, d2) {
+        var key = getStorageKey(d1, d2);
+        var val = localStorage.getItem(key);
+        return val ? parseFloat(val) : null;
+      }
+
+      function setBestScore(d1, d2, score) {
+        var key = getStorageKey(d1, d2);
+        var current = getBestScore(d1, d2);
+        if (current === null || score < current) {
+          localStorage.setItem(key, score.toFixed(1));
+          return true; // new best
+        }
+        return false;
+      }
+
+      function getMedalLevel(d1, d2) {
+        var best = getBestScore(d1, d2);
+        if (best === null) return null;
+        var targets = getTargets(d1, d2);
+        if (best <= targets.gold) return 'gold';
+        if (best <= targets.silver) return 'silver';
+        if (best <= targets.bronze) return 'bronze';
+        return null;
+      }
+
+      function countMedals() {
+        var counts = { gold: 0, silver: 0, bronze: 0 };
+        CHALLENGES.forEach(function(pair) {
+          var level = getMedalLevel(pair[0], pair[1]);
+          if (level) counts[level]++;
+        });
+        return counts;
+      }
+
+      function updateValidRange() {
+        var range = getValidRange();
+        validRangeEl.textContent = range.min + ' - ' + range.max;
+        validateAllCells();
+      }
+
+      function updateTargetDisplay() {
+        var dice = getDice();
+        var targets = getTargets(dice.d1, dice.d2);
+        var best = getBestScore(dice.d1, dice.d2);
+        var medal = getMedalLevel(dice.d1, dice.d2);
+
+        targetValueEl.innerHTML =
+          '<span class="target-medal gold">🥇' + targets.gold + '</span> ' +
+          '<span class="target-medal silver">🥈' + targets.silver + '</span> ' +
+          '<span class="target-medal bronze">🥉' + targets.bronze + '</span>';
+
+        if (best !== null) {
+          bestValueEl.textContent = best.toFixed(1);
+          bestValueEl.classList.remove('medal-gold', 'medal-silver', 'medal-bronze');
+          if (medal) bestValueEl.classList.add('medal-' + medal);
+          trophyIndicatorEl.textContent = medal === 'gold' ? ' 🥇' : medal === 'silver' ? ' 🥈' : medal === 'bronze' ? ' 🥉' : '';
+        } else {
+          bestValueEl.textContent = '--';
+          bestValueEl.classList.remove('medal-gold', 'medal-silver', 'medal-bronze');
+          trophyIndicatorEl.textContent = '';
+        }
+
+        updateTrophyGrid();
+      }
+
+      function updateTrophyGrid() {
+        var dice = getDice();
+        var currentKey = getDiceKey(dice.d1, dice.d2);
+
+        trophyGridEl.innerHTML = '';
+        CHALLENGES.forEach(function(pair) {
+          var d1 = pair[0], d2 = pair[1];
+          var key = getDiceKey(d1, d2);
+          var medal = getMedalLevel(d1, d2);
+          var selected = key === currentKey;
+
+          var item = document.createElement('div');
+          item.className = 'trophy-item';
+          if (medal) item.classList.add('earned', 'medal-' + medal);
+          if (selected) item.classList.add('selected');
+
+          var icon = document.createElement('div');
+          icon.className = 'trophy-icon';
+          icon.textContent = medal === 'gold' ? '🥇' : medal === 'silver' ? '🥈' : medal === 'bronze' ? '🥉' : '🎯';
+
+          var label = document.createElement('div');
+          label.className = 'trophy-dice';
+          label.textContent = 'd' + d1 + '+d' + d2;
+
+          item.appendChild(icon);
+          item.appendChild(label);
+
+          item.addEventListener('click', function() {
+            setDice(d1, d2);
+          });
+
+          trophyGridEl.appendChild(item);
+        });
+      }
+
+      function onDiceChange() {
+        updateValidRange();
+        updateTargetDisplay();
+        resultsEl.classList.remove('visible');
+      }
+
+      function createGrid() {
+        gridEl.innerHTML = '';
+        cells = [];
+        for (var i = 0; i < 25; i++) {
+          var cell = document.createElement('div');
+          cell.className = 'bingo-cell';
+          if (i === FREE_CELL) {
+            cell.classList.add('free');
+            cell.textContent = 'FREE';
+            cells.push({ el: cell, value: null, isFree: true });
+          } else {
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.inputMode = 'numeric';
+            input.pattern = '[0-9]*';
+            input.maxLength = 2;
+            input.placeholder = '?';
+            input.dataset.index = i;
+            input.addEventListener('input', onCellInput);
+            input.addEventListener('blur', onCellBlur);
+            cell.appendChild(input);
+            cells.push({ el: cell, input: input, value: null, isFree: false });
+          }
+          gridEl.appendChild(cell);
+        }
+      }
+
+      function onCellInput(e) {
+        var input = e.target;
+        // Only allow digits
+        input.value = input.value.replace(/[^0-9]/g, '');
+      }
+
+      function onCellBlur(e) {
+        var input = e.target;
+        var idx = parseInt(input.dataset.index, 10);
+        var val = parseInt(input.value, 10);
+        var range = getValidRange();
+
+        if (isNaN(val)) {
+          cells[idx].value = null;
+          input.value = '';
+          cells[idx].el.classList.remove('marked');
+        } else if (val < range.min || val > range.max) {
+          // Invalid - highlight and clear
+          input.value = '';
+          cells[idx].value = null;
+          cells[idx].el.classList.remove('marked');
+        } else {
+          cells[idx].value = val;
+        }
+      }
+
+      function validateAllCells() {
+        var range = getValidRange();
+        cells.forEach(function(cell, i) {
+          if (cell.isFree) return;
+          var val = parseInt(cell.input.value, 10);
+          if (!isNaN(val) && (val < range.min || val > range.max)) {
+            cell.input.value = '';
+            cell.value = null;
+            cell.el.classList.remove('marked');
+          }
+        });
+      }
+
+      function getCardValues() {
+        return cells.map(function(cell) {
+          return cell.isFree ? 'FREE' : cell.value;
+        });
+      }
+
+      function isCardFilled() {
+        for (var i = 0; i < cells.length; i++) {
+          if (!cells[i].isFree && cells[i].value === null) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      // Roll dice and return sum
+      function rollDice(d1, d2) {
+        var r1 = Math.floor(Math.random() * d1) + 1;
+        var r2 = Math.floor(Math.random() * d2) + 1;
+        return r1 + r2;
+      }
+
+      // Check if any winning line is complete
+      function checkWin(marked) {
+        for (var i = 0; i < WINNING_LINES.length; i++) {
+          var line = WINNING_LINES[i];
+          var won = true;
+          for (var j = 0; j < line.length; j++) {
+            if (!marked[line[j]]) {
+              won = false;
+              break;
+            }
+          }
+          if (won) return line;
+        }
+        return null;
+      }
+
+      // Simulate one game, return number of rolls to bingo
+      function simulateOneGame(cardValues, d1, d2) {
+        var marked = [];
+        for (var i = 0; i < 25; i++) {
+          marked[i] = (cardValues[i] === 'FREE');
+        }
+
+        var rolls = 0;
+        while (true) {
+          var sum = rollDice(d1, d2);
+          rolls++;
+
+          // Mark first unmarked cell with this sum
+          for (var i = 0; i < 25; i++) {
+            if (!marked[i] && cardValues[i] === sum) {
+              marked[i] = true;
+              break;
+            }
+          }
+
+          if (checkWin(marked)) {
+            return rolls;
+          }
+
+          // Safety: cap at 10000 rolls
+          if (rolls >= 10000) {
+            return rolls;
+          }
+        }
+      }
+
+      function runSimulation() {
+        if (!isCardFilled()) {
+          alert('Please fill in all cells with valid dice sums!');
+          return;
+        }
+
+        var cardValues = getCardValues();
+        var dice = getDice();
+        var results = [];
+
+        btnSimulate.disabled = true;
+        resultsEl.classList.remove('visible');
+        simProgressEl.classList.add('visible');
+
+        var completed = 0;
+        var batchSize = 500;
+
+        function runBatch() {
+          var end = Math.min(completed + batchSize, NUM_SIMULATIONS);
+          for (var i = completed; i < end; i++) {
+            results.push(simulateOneGame(cardValues, dice.d1, dice.d2));
+          }
+          completed = end;
+
+          var pct = Math.round((completed / NUM_SIMULATIONS) * 100);
+          progressFillEl.style.width = pct + '%';
+          progressTextEl.textContent = 'Simulating... ' + completed.toLocaleString() + ' / ' + NUM_SIMULATIONS.toLocaleString();
+
+          if (completed < NUM_SIMULATIONS) {
+            setTimeout(runBatch, 0);
+          } else {
+            showResults(results, dice);
+          }
+        }
+
+        runBatch();
+      }
+
+      function showResults(results, dice) {
+        simProgressEl.classList.remove('visible');
+        btnSimulate.disabled = false;
+
+        // Calculate stats
+        var sum = 0;
+        var min = Infinity;
+        var max = -Infinity;
+        for (var i = 0; i < results.length; i++) {
+          sum += results[i];
+          if (results[i] < min) min = results[i];
+          if (results[i] > max) max = results[i];
+        }
+        var avg = sum / results.length;
+
+        // Sort for median and percentiles
+        results.sort(function(a, b) { return a - b; });
+        var median = results[Math.floor(results.length / 2)];
+
+        var targets = getTargets(dice.d1, dice.d2);
+        var oldMedal = getMedalLevel(dice.d1, dice.d2);
+        var isNewBest = setBestScore(dice.d1, dice.d2, avg);
+        var newMedal = getMedalLevel(dice.d1, dice.d2);
+        var earnedNewMedal = isNewBest && newMedal && newMedal !== oldMedal;
+        var improvedMedal = earnedNewMedal || (isNewBest && newMedal);
+
+        resultAvgEl.textContent = avg.toFixed(1);
+        resultAvgEl.classList.remove('success', 'medal-gold', 'medal-silver', 'medal-bronze');
+        if (newMedal) {
+          resultAvgEl.classList.add('medal-' + newMedal);
+        }
+
+        if (earnedNewMedal) {
+          var medalEmoji = newMedal === 'gold' ? '🥇' : newMedal === 'silver' ? '🥈' : '🥉';
+          var medalName = newMedal.charAt(0).toUpperCase() + newMedal.slice(1);
+          resultStatusEl.textContent = medalEmoji + ' ' + medalName + ' medal earned!';
+          resultStatusEl.className = 'result-status success';
+        } else if (isNewBest && newMedal) {
+          resultStatusEl.textContent = '⭐ New personal best!';
+          resultStatusEl.className = 'result-status success';
+        } else if (newMedal) {
+          resultStatusEl.textContent = '✓ Medal achieved!';
+          resultStatusEl.className = 'result-status success';
+        } else if (avg <= targets.bronze) {
+          resultStatusEl.textContent = '✓ Good job!';
+          resultStatusEl.className = 'result-status success';
+        } else {
+          var diff = (avg - targets.bronze).toFixed(1);
+          resultStatusEl.textContent = 'Keep trying! Need ' + diff + ' fewer for bronze.';
+          resultStatusEl.className = 'result-status try-again';
+        }
+
+        resultDetailsEl.innerHTML =
+          '<strong>Targets:</strong> 🥇' + targets.gold + ' 🥈' + targets.silver + ' 🥉' + targets.bronze + '<br>' +
+          '<strong>Median:</strong> ' + median + ' rolls<br>' +
+          '<strong>Best game:</strong> ' + min + ' rolls<br>' +
+          '<strong>Worst game:</strong> ' + max + ' rolls';
+
+        resultsEl.classList.add('visible');
+        updateTargetDisplay();
+
+        // Celebrate if earned a new medal!
+        if (earnedNewMedal) {
+          launchConfetti();
+        }
+      }
+
+      function clearCard() {
+        cells.forEach(function(cell) {
+          if (!cell.isFree) {
+            cell.input.value = '';
+            cell.value = null;
+            cell.el.classList.remove('marked', 'winner');
+          }
+        });
+        resultsEl.classList.remove('visible');
+      }
+
+      function launchConfetti() {
+        var colors = ['#7c3aed', '#f59e0b', '#10b981', '#ec4899', '#3b82f6'];
+        for (var i = 0; i < 80; i++) {
+          var confetti = document.createElement('div');
+          confetti.className = 'confetti';
+          confetti.style.left = Math.random() * 100 + '%';
+          confetti.style.top = '-10px';
+          confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          confetti.style.animation = 'confettiFall ' + (1 + Math.random()) + 's ease-out forwards';
+          confetti.style.animationDelay = Math.random() * 0.5 + 's';
+          celebrationEl.appendChild(confetti);
+        }
+        setTimeout(function() {
+          celebrationEl.innerHTML = '';
+        }, 2500);
+      }
+
+      // Event listeners
+      btnSimulate.addEventListener('click', runSimulation);
+      btnClear.addEventListener('click', clearCard);
+
+      // Init
+      createGrid();
+      updateValidRange();
+      updateTargetDisplay();
+    })();
+  </script>
+</body>
+</html>
