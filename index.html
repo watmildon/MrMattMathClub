@@ -61,6 +61,36 @@
         <p>Color all 50 states so no neighbors match!</p>
       </a>
 
+      <a href="activities/four-color-europe.html" class="card four-color-europe">
+        <span class="icon">&#x1F5FA;</span>
+        <h2>Four Coloring Europe</h2>
+        <p>Color all 41 countries so no neighbors match!</p>
+      </a>
+
+      <a href="activities/four-color-asia.html" class="card four-color-asia">
+        <span class="icon">&#x1F5FA;</span>
+        <h2>Four Coloring Asia</h2>
+        <p>Color all 45 countries so no neighbors match!</p>
+      </a>
+
+      <a href="activities/four-color-africa.html" class="card four-color-africa">
+        <span class="icon">&#x1F5FA;</span>
+        <h2>Four Coloring Africa</h2>
+        <p>Color all 49 countries so no neighbors match!</p>
+      </a>
+
+      <a href="activities/four-color-north-america.html" class="card four-color-north-america">
+        <span class="icon">&#x1F5FA;</span>
+        <h2>Four Coloring North America</h2>
+        <p>Color all 15 countries so no neighbors match!</p>
+      </a>
+
+      <a href="activities/four-color-south-america.html" class="card four-color-south-america">
+        <span class="icon">&#x1F5FA;</span>
+        <h2>Four Coloring South America</h2>
+        <p>Color all 12 countries so no neighbors match!</p>
+      </a>
+
       <a href="activities/number-bonds.html" class="card number-bonds">
         <span class="icon">&#x1F517;</span>
         <h2>Number Bonds</h2>
@@ -119,31 +149,39 @@
     }
   } catch(e) {}
 
-  // Four Color USA progress / completion badge
-  (function() {
-    var fcUSACard = document.querySelector('.four-color-usa');
-    if (!fcUSACard) return;
+  // Four Color map progress / completion badges
+  var mapActivities = [
+    { selector: '.four-color-usa', completedKey: 'fourColorUSA_completed', colorsKey: 'fourColorUSA_stateColors', total: 50, unit: 'states' },
+    { selector: '.four-color-europe', completedKey: 'fourColorEurope_completed', colorsKey: 'fourColorEurope_stateColors', total: 39, unit: 'countries' },
+    { selector: '.four-color-asia', completedKey: 'fourColorAsia_completed', colorsKey: 'fourColorAsia_stateColors', total: 44, unit: 'countries' },
+    { selector: '.four-color-africa', completedKey: 'fourColorAfrica_completed', colorsKey: 'fourColorAfrica_stateColors', total: 49, unit: 'countries' },
+    { selector: '.four-color-north-america', completedKey: 'fourColorNorthAmerica_completed', colorsKey: 'fourColorNorthAmerica_stateColors', total: 15, unit: 'countries' },
+    { selector: '.four-color-south-america', completedKey: 'fourColorSouthAmerica_completed', colorsKey: 'fourColorSouthAmerica_stateColors', total: 12, unit: 'countries' }
+  ];
+  mapActivities.forEach(function(act) {
+    var card = document.querySelector(act.selector);
+    if (!card) return;
 
-    if (localStorage.getItem('fourColorUSA_completed') === 'true') {
+    if (localStorage.getItem(act.completedKey) === 'true') {
       var badge = document.createElement('span');
       badge.className = 'card-badge trophy-gold';
       badge.innerHTML = trophySvg('#f59e0b') + 'Complete!';
-      fcUSACard.appendChild(badge);
+      card.appendChild(badge);
     } else {
       try {
-        var saved = JSON.parse(localStorage.getItem('fourColorUSA_stateColors'));
+        var saved = JSON.parse(localStorage.getItem(act.colorsKey));
         if (saved && typeof saved === 'object') {
           var count = Object.keys(saved).length;
           if (count > 0) {
             var badge = document.createElement('span');
             badge.className = 'card-badge high-score';
-            badge.textContent = count + '/50 states';
-            fcUSACard.appendChild(badge);
+            badge.textContent = count + '/' + act.total + ' ' + act.unit;
+            card.appendChild(badge);
           }
         }
       } catch(e) {}
     }
-  })();
+  });
 </script>
 </body>
 </html>
