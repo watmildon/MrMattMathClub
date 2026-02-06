@@ -4,10 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dice Bingo - Mr. Matt Math Club</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237c3aed'/><text x='50' y='76' font-size='80' font-weight='bold' text-anchor='middle' fill='white'>M</text></svg>">
   <link rel="stylesheet" href="../styles.css">
   <style>
     .back-row {
       max-width: 600px;
+      display: flex;
+      align-items: center;
     }
 
     .game-card {
@@ -304,15 +307,19 @@
 
     /* Results */
     .results {
-      display: none;
       margin-top: 1.5rem;
       padding: 1.5rem;
       background: #f8fafc;
       border-radius: 12px;
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: opacity 0.2s, max-height 0.2s;
     }
 
     .results.visible {
-      display: block;
+      opacity: 1;
+      max-height: 300px;
     }
 
     .result-main {
@@ -358,12 +365,16 @@
 
     /* Progress bar for simulation */
     .sim-progress {
-      display: none;
       margin: 1rem 0;
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: opacity 0.2s, max-height 0.2s;
     }
 
     .sim-progress.visible {
-      display: block;
+      opacity: 1;
+      max-height: 60px;
     }
 
     .progress-bar {
@@ -407,6 +418,187 @@
       0% { opacity: 1; transform: translateY(0) rotate(0deg); }
       100% { opacity: 0; transform: translateY(400px) rotate(720deg); }
     }
+
+    /* Dice animation overlay */
+    .dice-overlay {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      z-index: 99;
+    }
+
+    .falling-die {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #1e293b;
+      opacity: 0;
+    }
+
+    .falling-die.purple {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      color: white;
+    }
+
+    .falling-die.blue {
+      background: linear-gradient(135deg, #4c6ef5, #3b82f6);
+      color: white;
+    }
+
+    @keyframes diceFall {
+      0% {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg) scale(0.5);
+      }
+      10% {
+        opacity: 1;
+        transform: translateY(10vh) rotate(72deg) scale(1);
+      }
+      80% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(110vh) rotate(720deg) scale(0.8);
+      }
+    }
+
+    @keyframes diceShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      75% { transform: translateX(3px); }
+    }
+
+    .btn-simulate.shaking {
+      animation: diceShake 0.1s ease-in-out infinite;
+    }
+
+    /* Help button */
+    .help-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #7c3aed;
+      color: white;
+      border: none;
+      font-size: 1.25rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s, box-shadow 0.15s;
+      margin-left: auto;
+    }
+
+    .help-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Help dialog overlay */
+    .help-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      padding: 1rem;
+    }
+
+    .help-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .help-dialog {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      max-width: 400px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      transform: scale(0.9);
+      transition: transform 0.2s;
+    }
+
+    .help-overlay.visible .help-dialog {
+      transform: scale(1);
+    }
+
+    .help-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .help-section {
+      margin-bottom: 1rem;
+    }
+
+    .help-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+
+    .help-section p,
+    .help-section li {
+      font-size: 0.95rem;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    .help-section ul {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    .help-section li {
+      margin-bottom: 0.25rem;
+    }
+
+    .help-emoji {
+      font-size: 1.1rem;
+    }
+
+    .help-close-btn {
+      display: block;
+      width: 100%;
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: transform 0.15s;
+    }
+
+    .help-close-btn:hover {
+      transform: translateY(-2px);
+    }
   </style>
 </head>
 <body>
@@ -418,6 +610,45 @@
           <path d="M15 10H5M5 10l5-5M5 10l5 5"/>
         </svg>
       </a>
+      <button class="help-btn" id="help-btn" aria-label="Help">?</button>
+    </div>
+
+    <!-- Help Dialog -->
+    <div class="help-overlay" id="help-overlay">
+      <div class="help-dialog">
+        <div class="help-title">How to Play Dice Bingo</div>
+
+        <div class="help-section">
+          <h3><span class="help-emoji">1.</span> Pick Your Dice</h3>
+          <p>Click on a challenge to choose which dice to use. Different dice have different sums!</p>
+        </div>
+
+        <div class="help-section">
+          <h3><span class="help-emoji">2.</span> Fill Your Card</h3>
+          <p>Type numbers into the bingo squares. Some arrangements will lead to quicker bingos.</p>
+        </div>
+
+        <div class="help-section">
+          <h3><span class="help-emoji">3.</span> Test Your Card</h3>
+          <p>Click "Test My Card!" to roll the dice 10,000 times. The game counts how many rolls, in average, it takes to get a bingo. Remember, lower scores are better!</p>
+        </div>
+
+        <div class="help-section">
+          <h3><span class="help-emoji">4.</span> Win Medals!</h3>
+          <ul>
+            <li><strong>Bronze:</strong> Good start!</li>
+            <li><strong>Silver:</strong> Nice thinking!</li>
+            <li><strong>Gold:</strong> Amazing strategy!</li>
+          </ul>
+        </div>
+
+        <div class="help-section">
+          <h3><span class="help-emoji">5.</span> Tips</h3>
+          <p>Some dice sums happen more often than others. Think about which numbers are easier to roll!</p>
+        </div>
+
+        <button class="help-close-btn" id="help-close-btn">Got it!</button>
+      </div>
     </div>
 
     <div class="game-card">
@@ -476,6 +707,8 @@
     </div>
 
     <div class="celebration" id="celebration"></div>
+    <div class="dice-overlay" id="dice-overlay"></div>
+
   </main>
 
   <script>
@@ -550,6 +783,7 @@
       var progressFillEl = document.getElementById('progress-fill');
       var progressTextEl = document.getElementById('progress-text');
       var celebrationEl = document.getElementById('celebration');
+      var diceOverlayEl = document.getElementById('dice-overlay');
 
       var cells = [];
       var currentDice = { d1: 6, d2: 6 }; // Default to 2d6
@@ -833,9 +1067,18 @@
         var dice = getDice();
         var results = [];
 
+        // Save scroll position before layout changes
+        var scrollY = window.scrollY;
+
         btnSimulate.disabled = true;
         resultsEl.classList.remove('visible');
         simProgressEl.classList.add('visible');
+
+        // Restore scroll position after layout change
+        window.scrollTo(0, scrollY);
+
+        // Launch dice animation!
+        launchDiceAnimation();
 
         var completed = 0;
         var batchSize = 500;
@@ -885,12 +1128,17 @@
         var isNewBest = setBestScore(dice.d1, dice.d2, avg);
         var newMedal = getMedalLevel(dice.d1, dice.d2);
         var earnedNewMedal = isNewBest && newMedal && newMedal !== oldMedal;
-        var improvedMedal = earnedNewMedal || (isNewBest && newMedal);
+
+        // Determine the medal level for THIS run (not the stored best)
+        var currentRunMedal = null;
+        if (avg <= targets.gold) currentRunMedal = 'gold';
+        else if (avg <= targets.silver) currentRunMedal = 'silver';
+        else if (avg <= targets.bronze) currentRunMedal = 'bronze';
 
         resultAvgEl.textContent = avg.toFixed(1);
         resultAvgEl.classList.remove('success', 'medal-gold', 'medal-silver', 'medal-bronze');
-        if (newMedal) {
-          resultAvgEl.classList.add('medal-' + newMedal);
+        if (currentRunMedal) {
+          resultAvgEl.classList.add('medal-' + currentRunMedal);
         }
 
         if (earnedNewMedal) {
@@ -898,18 +1146,15 @@
           var medalName = newMedal.charAt(0).toUpperCase() + newMedal.slice(1);
           resultStatusEl.textContent = medalEmoji + ' ' + medalName + ' medal earned!';
           resultStatusEl.className = 'result-status success';
-        } else if (isNewBest && newMedal) {
+        } else if (isNewBest && currentRunMedal) {
           resultStatusEl.textContent = '⭐ New personal best!';
           resultStatusEl.className = 'result-status success';
-        } else if (newMedal) {
-          resultStatusEl.textContent = '✓ Medal achieved!';
-          resultStatusEl.className = 'result-status success';
-        } else if (avg <= targets.bronze) {
-          resultStatusEl.textContent = '✓ Good job!';
+        } else if (currentRunMedal) {
+          resultStatusEl.textContent = '✓ Good run!';
           resultStatusEl.className = 'result-status success';
         } else {
           var diff = (avg - targets.bronze).toFixed(1);
-          resultStatusEl.textContent = 'Keep trying! Need ' + diff + ' fewer for bronze.';
+          resultStatusEl.textContent = 'Try a different card! Need ' + diff + ' fewer for bronze.';
           resultStatusEl.className = 'result-status try-again';
         }
 
@@ -956,14 +1201,101 @@
         }, 2500);
       }
 
+      // Dice faces using Unicode dice characters or dots
+      var diceFaces = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+
+      function getDieFace(sides) {
+        var roll = Math.floor(Math.random() * Math.min(sides, 6)) + 1;
+        return diceFaces[roll] || roll;
+      }
+
+      function launchDiceAnimation() {
+        var dice = getDice();
+        var numDice = 20; // Number of dice to spawn
+
+        btnSimulate.classList.add('shaking');
+        setTimeout(function() {
+          btnSimulate.classList.remove('shaking');
+        }, 300);
+
+        for (var i = 0; i < numDice; i++) {
+          (function(index) {
+            setTimeout(function() {
+              var die = document.createElement('div');
+              die.className = 'falling-die ' + (index % 2 === 0 ? 'purple' : 'blue');
+              die.style.left = (5 + Math.random() * 90) + '%';
+              die.style.top = '-60px';
+
+              // Pick which die type to show
+              var sides = index % 2 === 0 ? dice.d1 : dice.d2;
+              die.textContent = getDieFace(sides);
+
+              // Randomize animation
+              var duration = 1.5 + Math.random() * 1;
+              var rotation = 360 + Math.random() * 720;
+              die.style.animation = 'diceFall ' + duration + 's cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards';
+
+              diceOverlayEl.appendChild(die);
+
+              // Cycle through faces while falling
+              var faceInterval = setInterval(function() {
+                die.textContent = getDieFace(sides);
+              }, 100);
+
+              setTimeout(function() {
+                clearInterval(faceInterval);
+                if (die.parentNode) {
+                  die.parentNode.removeChild(die);
+                }
+              }, duration * 1000 + 100);
+            }, index * 80); // Stagger each die
+          })(i);
+        }
+      }
+
       // Event listeners
-      btnSimulate.addEventListener('click', runSimulation);
-      btnClear.addEventListener('click', clearCard);
+      btnSimulate.addEventListener('click', function(e) {
+        e.preventDefault();
+        btnSimulate.blur();
+        runSimulation();
+      });
+      btnClear.addEventListener('click', function(e) {
+        e.preventDefault();
+        btnClear.blur();
+        clearCard();
+      });
+
+      // Help dialog
+      var helpOverlayEl = document.getElementById('help-overlay');
+      var helpBtnEl = document.getElementById('help-btn');
+      var helpCloseBtnEl = document.getElementById('help-close-btn');
+
+      function showHelp() {
+        helpOverlayEl.classList.add('visible');
+      }
+
+      function hideHelp() {
+        helpOverlayEl.classList.remove('visible');
+        localStorage.setItem('diceBingo_helpSeen', 'true');
+      }
+
+      helpBtnEl.addEventListener('click', showHelp);
+      helpCloseBtnEl.addEventListener('click', hideHelp);
+      helpOverlayEl.addEventListener('click', function(e) {
+        if (e.target === helpOverlayEl) {
+          hideHelp();
+        }
+      });
 
       // Init
       createGrid();
       updateValidRange();
       updateTargetDisplay();
+
+      // Show help on first visit
+      if (!localStorage.getItem('diceBingo_helpSeen')) {
+        showHelp();
+      }
     })();
   </script>
 </body>
