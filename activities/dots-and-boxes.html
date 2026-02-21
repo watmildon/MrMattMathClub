@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="../styles.css">
   <style>
     .back-row {
-      max-width: 520px;
+      max-width: 600px;
       display: flex;
       align-items: center;
     }
@@ -16,10 +16,10 @@
     .game-card {
       background: white;
       border-radius: 16px;
-      padding: 2rem 1.5rem;
+      padding: 1rem 1.5rem 1.5rem;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
       text-align: center;
-      max-width: 520px;
+      max-width: 600px;
       margin: 0 auto;
     }
 
@@ -28,14 +28,14 @@
       display: flex;
       justify-content: center;
       gap: 0.5rem;
-      margin-bottom: 1.25rem;
+      margin-bottom: 0.25rem;
     }
 
     .mode-btn {
       border: 2px solid #e2e8f0;
       border-radius: 20px;
-      padding: 0.5rem 1.25rem;
-      font-size: 0.95rem;
+      padding: 0.4rem 1rem;
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
       background: white;
@@ -53,36 +53,12 @@
       border-color: #7c3aed;
     }
 
-    /* Trophy display */
-    .trophy-display {
-      background: #f8fafc;
-      border-radius: 12px;
-      padding: 0.75rem 1rem;
-      margin-bottom: 1.25rem;
-      font-size: 0.95rem;
-      color: #64748b;
-    }
-
-    .trophy-level {
-      font-weight: 700;
-      font-size: 1.1rem;
-    }
-
-    .trophy-level.bronze { color: #b45309; }
-    .trophy-level.silver { color: #94a3b8; }
-    .trophy-level.gold   { color: #f59e0b; }
-
-    .streak-info {
-      font-size: 0.85rem;
-      margin-top: 0.25rem;
-    }
-
     /* Turn indicator */
     .turn-indicator {
-      font-size: 1.15rem;
+      font-size: 1rem;
       font-weight: 600;
-      margin-bottom: 0.75rem;
       min-height: 1.5em;
+      margin-bottom: 0.25rem;
       transition: color 0.2s;
     }
 
@@ -95,19 +71,22 @@
       display: flex;
       justify-content: center;
       gap: 2rem;
-      margin-bottom: 1rem;
+      margin-top: 0.25rem;
     }
 
     .score-item {
-      font-size: 1.1rem;
+      font-size: 0.9rem;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
     }
 
     .score-item.player1 { color: #7c3aed; }
     .score-item.player2 { color: #f97316; }
 
     .score-value {
-      font-size: 1.5rem;
+      font-size: 1.2rem;
       font-weight: 700;
     }
 
@@ -115,13 +94,13 @@
     .board-container {
       display: flex;
       justify-content: center;
-      margin: 1rem 0 1.5rem;
+      margin: 0.5rem 0;
       -webkit-user-select: none;
       user-select: none;
     }
 
     .board-container svg {
-      max-width: 100%;
+      width: 100%;
       height: auto;
     }
 
@@ -443,31 +422,27 @@
     </div>
 
     <div class="game-card">
-      <h2 class="activity-title">Dots and Boxes</h2>
+      <h2 class="activity-title" style="margin-bottom: 0.5rem;">Dots and Boxes</h2>
 
       <div class="mode-selector">
         <button class="mode-btn active" id="mode-computer">vs Computer</button>
         <button class="mode-btn" id="mode-human">vs Friend</button>
       </div>
 
-      <div class="trophy-display" id="trophy-display">
-        Beat the computer to earn trophies!
-      </div>
-
       <div class="turn-indicator player1" id="turn-indicator">Your Turn</div>
+
+      <div class="board-container" id="board-container"></div>
 
       <div class="scoreboard">
         <div class="score-item player1">
-          <div id="score-label-1">You</div>
-          <div class="score-value" id="score-1">0</div>
+          <span id="score-label-1">You</span>
+          <span class="score-value" id="score-1">0</span>
         </div>
         <div class="score-item player2">
-          <div id="score-label-2">Computer</div>
-          <div class="score-value" id="score-2">0</div>
+          <span id="score-label-2">Computer</span>
+          <span class="score-value" id="score-2">0</span>
         </div>
       </div>
-
-      <div class="board-container" id="board-container"></div>
 
       <div class="game-result" id="game-result">
         <div class="result-message" id="result-message"></div>
@@ -521,7 +496,6 @@
       var scoreLabel2El = document.getElementById('score-label-2');
       var modeComputerBtn = document.getElementById('mode-computer');
       var modeHumanBtn = document.getElementById('mode-human');
-      var trophyDisplayEl = document.getElementById('trophy-display');
       var gameResultEl = document.getElementById('game-result');
       var resultMessageEl = document.getElementById('result-message');
       var resultDetailEl = document.getElementById('result-detail');
@@ -645,8 +619,6 @@
         var ns = 'http://www.w3.org/2000/svg';
         var svg = document.createElementNS(ns, 'svg');
         svg.setAttribute('viewBox', '0 0 ' + SVG_W + ' ' + SVG_H);
-        svg.setAttribute('width', SVG_W);
-        svg.setAttribute('height', SVG_H);
 
         // Draw box fills
         for (var r = 0; r < ROWS - 1; r++) {
@@ -929,7 +901,8 @@
               trophyMessageEl.style.display = '';
               launchConfetti();
             } else {
-              trophyMessageEl.style.display = 'none';
+              trophyMessageEl.textContent = 'Win streak: ' + winStreak;
+              trophyMessageEl.style.display = '';
             }
           } else if (s2 > s1) {
             resultMessageEl.textContent = 'Computer wins!';
@@ -960,7 +933,6 @@
         }
 
         gameResultEl.classList.add('visible');
-        updateTrophyDisplay();
         updateTurnIndicator();
       }
 
@@ -988,27 +960,6 @@
           return true;
         }
         return false;
-      }
-
-      function updateTrophyDisplay() {
-        if (gameMode !== 'computer') {
-          trophyDisplayEl.style.display = 'none';
-          return;
-        }
-        trophyDisplayEl.style.display = '';
-
-        if (trophyLevel === 'gold') {
-          trophyDisplayEl.innerHTML = '<span class="trophy-level gold">&#x1F3C6; Gold Trophy</span>' +
-            '<div class="streak-info">Win streak: ' + winStreak + '</div>';
-        } else if (trophyLevel === 'silver') {
-          trophyDisplayEl.innerHTML = '<span class="trophy-level silver">&#x1F3C6; Silver Trophy</span>' +
-            '<div class="streak-info">Win streak: ' + winStreak + ' (5 in a row for Gold)</div>';
-        } else if (trophyLevel === 'bronze') {
-          trophyDisplayEl.innerHTML = '<span class="trophy-level bronze">&#x1F3C6; Bronze Trophy</span>' +
-            '<div class="streak-info">Win streak: ' + winStreak + ' (3 in a row for Silver)</div>';
-        } else {
-          trophyDisplayEl.innerHTML = 'Beat the computer to earn trophies!<div class="streak-info">Win streak: ' + winStreak + '</div>';
-        }
       }
 
       // ---- UI Updates ----
@@ -1064,7 +1015,6 @@
           modeHumanBtn.classList.add('active');
           modeComputerBtn.classList.remove('active');
         }
-        updateTrophyDisplay();
         resetGame();
       }
 
@@ -1124,7 +1074,6 @@
       // ---- Init ----
 
       resetGame();
-      updateTrophyDisplay();
 
       if (!localStorage.getItem('dotsAndBoxes_helpSeen')) {
         showHelp();
