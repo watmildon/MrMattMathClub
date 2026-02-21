@@ -29,6 +29,10 @@
       background: #f1f5f9;
       color: #475569;
     }
+    .card-badge.trophy-bronze {
+      background: #fef3c7;
+      color: #b45309;
+    }
   </style>
 </head>
 <body>
@@ -60,6 +64,12 @@
         <span class="icon">&#x1F3B2;</span>
         <h2>Dice Bingo</h2>
         <p>Fill a bingo card and see how many rolls to win!</p>
+      </a>
+
+      <a href="activities/nim.html" class="card nim">
+        <span class="icon">&#x1F9E0;</span>
+        <h2>NIM</h2>
+        <p>Take turns removing stones. Don't take the last one!</p>
       </a>
 
       <a href="activities/four-coloring.html" class="card four-coloring">
@@ -246,6 +256,30 @@
         badge.textContent = parts.join(' ');
       }
       diceBingoCard.appendChild(badge);
+    }
+  })();
+
+  // NIM trophy badge
+  (function() {
+    var nimCard = document.querySelector('.nim');
+    if (!nimCard) return;
+
+    var nimTrophy = localStorage.getItem('nim_trophyLevel');
+    if (nimTrophy === 'gold') {
+      var badge = document.createElement('span');
+      badge.className = 'card-badge trophy-gold';
+      badge.innerHTML = trophySvg('#f59e0b') + 'Gold!';
+      nimCard.appendChild(badge);
+    } else if (nimTrophy === 'silver') {
+      var badge = document.createElement('span');
+      badge.className = 'card-badge trophy-silver';
+      badge.innerHTML = trophySvg('#94a3b8') + 'Silver';
+      nimCard.appendChild(badge);
+    } else if (nimTrophy === 'bronze') {
+      var badge = document.createElement('span');
+      badge.className = 'card-badge trophy-bronze';
+      badge.innerHTML = trophySvg('#b45309') + 'Bronze';
+      nimCard.appendChild(badge);
     }
   })();
 </script>

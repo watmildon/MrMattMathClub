@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NIM - Mr. Matt Math Club</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237c3aed'/><text x='50' y='76' font-size='80' font-weight='bold' text-anchor='middle' fill='white'>M</text></svg>">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    .back-row {
+      max-width: 520px;
+      display: flex;
+      align-items: center;
+    }
+
+    .game-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem 1.5rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* Mode toggle */
+    .mode-selector {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .mode-btn {
+      border: 2px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: white;
+      color: #64748b;
+      transition: all 0.15s;
+    }
+
+    .mode-btn:hover {
+      border-color: #7c3aed;
+    }
+
+    .mode-btn.active {
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      color: white;
+      border-color: #7c3aed;
+    }
+
+    /* Trophy display */
+    .trophy-display {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.95rem;
+      color: #64748b;
+    }
+
+    .trophy-level {
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .trophy-level.bronze { color: #b45309; }
+    .trophy-level.silver { color: #94a3b8; }
+    .trophy-level.gold   { color: #f59e0b; }
+
+    .streak-info {
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+    }
+
+    /* Turn indicator */
+    .turn-indicator {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      min-height: 1.5em;
+      transition: color 0.2s;
+    }
+
+    .turn-indicator.player1 { color: #7c3aed; }
+    .turn-indicator.player2 { color: #4c6ef5; }
+    .turn-indicator.thinking { color: #94a3b8; }
+
+    /* NIM board */
+    .nim-board {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+    }
+
+    .nim-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+    }
+
+    /* Individual stone */
+    .stone {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 3px solid #7c3aed;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .stone:hover:not(.removed):not(.disabled) {
+      transform: scale(1.1);
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+    }
+
+    .stone.selected {
+      background: #7c3aed;
+      border-color: #6d28d9;
+      animation: stonePulse 0.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes stonePulse {
+      from { opacity: 0.7; transform: scale(0.95); }
+      to   { opacity: 1;   transform: scale(1.05); }
+    }
+
+    .stone.removed {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.3);
+      border-color: transparent;
+    }
+
+    .stone.disabled:not(.removed) {
+      cursor: not-allowed;
+      opacity: 0.35;
+    }
+
+    .stone.computer-pick {
+      background: #4c6ef5;
+      border-color: #3b82f6;
+      animation: stonePulse 0.4s ease-in-out infinite alternate;
+    }
+
+    @media (max-width: 420px) {
+      .stone {
+        width: 42px;
+        height: 42px;
+      }
+    }
+
+    /* Buttons */
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      color: white;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-confirm {
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .selection-hint {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 1rem;
+      min-height: 1.3em;
+    }
+
+    /* Game result */
+    .game-result {
+      margin-top: 1rem;
+      padding: 1.5rem;
+      background: #f8fafc;
+      border-radius: 12px;
+      display: none;
+      animation: popIn 0.3s ease;
+    }
+
+    .game-result.visible {
+      display: block;
+    }
+
+    .result-message {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .result-message.win  { color: #10b981; }
+    .result-message.lose { color: #f59e0b; }
+
+    .trophy-message {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #7c3aed;
+      margin-bottom: 0.75rem;
+    }
+
+    .result-play-again {
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0.75rem 2rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s;
+      margin-top: 0.5rem;
+    }
+
+    .result-play-again:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    @keyframes popIn {
+      0%   { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Help button */
+    .help-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #7c3aed;
+      color: white;
+      border: none;
+      font-size: 1.25rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s, box-shadow 0.15s;
+      margin-left: auto;
+    }
+
+    .help-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Help dialog overlay */
+    .help-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      padding: 1rem;
+    }
+
+    .help-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .help-dialog {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      max-width: 400px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      transform: scale(0.9);
+      transition: transform 0.2s;
+    }
+
+    .help-overlay.visible .help-dialog {
+      transform: scale(1);
+    }
+
+    .help-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .help-section {
+      margin-bottom: 1rem;
+    }
+
+    .help-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+
+    .help-section p,
+    .help-section li {
+      font-size: 0.95rem;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    .help-section ul {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    .help-section li {
+      margin-bottom: 0.25rem;
+    }
+
+    .help-close-btn {
+      display: block;
+      width: 100%;
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: transform 0.15s;
+    }
+
+    .help-close-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Celebration */
+    .celebration {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      z-index: 100;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      opacity: 0;
+    }
+
+    @keyframes confettiFall {
+      0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(400px) rotate(720deg); }
+    }
+  </style>
+</head>
+<body>
+  <header><h1>Mr. Matt Math Club</h1></header>
+  <main>
+    <div class="back-row">
+      <a href="../index.html" class="back-btn" aria-label="Back to Activities">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 10H5M5 10l5-5M5 10l5 5"/>
+        </svg>
+      </a>
+      <button class="help-btn" id="help-btn" aria-label="Help">?</button>
+    </div>
+
+    <!-- Help Dialog -->
+    <div class="help-overlay" id="help-overlay">
+      <div class="help-dialog">
+        <div class="help-title">How to Play NIM</div>
+
+        <div class="help-section">
+          <h3>1. Setup</h3>
+          <p>The board starts with 3 rows of stones: 3, 5, and 7.</p>
+        </div>
+
+        <div class="help-section">
+          <h3>2. Taking Turns</h3>
+          <p>On your turn, click any number of stones from a <strong>single row</strong>, then click "Confirm Move" to remove them.</p>
+        </div>
+
+        <div class="help-section">
+          <h3>3. Winning</h3>
+          <p>The player who takes the <strong>last stone loses!</strong> Force your opponent to take it.</p>
+        </div>
+
+        <div class="help-section">
+          <h3>4. Modes</h3>
+          <ul>
+            <li><strong>vs Computer:</strong> You go first, computer goes second.</li>
+            <li><strong>vs Friend:</strong> Take turns with a friend on the same device.</li>
+          </ul>
+        </div>
+
+        <div class="help-section">
+          <h3>5. Trophies (vs Computer)</h3>
+          <ul>
+            <li><strong>Bronze:</strong> Beat the computer once</li>
+            <li><strong>Silver:</strong> Beat it 3 times in a row</li>
+            <li><strong>Gold:</strong> Beat it 5 times in a row</li>
+          </ul>
+          <p>Is there a winning strategy??</p>
+        </div>
+
+        <button class="help-close-btn" id="help-close-btn">Got it!</button>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <h2 class="activity-title">NIM</h2>
+
+      <div class="mode-selector">
+        <button class="mode-btn active" id="mode-computer">vs Computer</button>
+        <button class="mode-btn" id="mode-human">vs Friend</button>
+      </div>
+
+      <div class="trophy-display" id="trophy-display">
+        Beat the computer to earn trophies!
+      </div>
+
+      <div class="turn-indicator player1" id="turn-indicator">Your Turn</div>
+
+      <div class="nim-board" id="nim-board"></div>
+
+      <div class="selection-hint" id="selection-hint">Click stones in a row to select them</div>
+
+      <div class="button-row">
+        <button class="btn btn-confirm" id="btn-confirm" disabled>Confirm Move</button>
+      </div>
+
+      <div class="game-result" id="game-result">
+        <div class="result-message" id="result-message"></div>
+        <div class="trophy-message" id="trophy-message"></div>
+        <button class="result-play-again" id="btn-play-again">Play Again</button>
+      </div>
+    </div>
+
+    <div class="celebration" id="celebration"></div>
+  </main>
+
+  <script>
+    (function() {
+      var INITIAL_ROWS = [3, 5, 7];
+
+      // Game state
+      var rows = [];
+      var stoneStates = [];   // 2D array: stoneStates[row][col] = 'present' | 'selected' | 'removed'
+      var selectedRow = -1;
+      var selectedCount = 0;
+      var currentPlayer = 1;
+      var gameMode = 'computer';
+      var gameOver = false;
+      var computerThinking = false;
+
+      // Trophy state
+      var winStreak = parseInt(localStorage.getItem('nim_winStreak')) || 0;
+      var trophyLevel = localStorage.getItem('nim_trophyLevel') || '';
+
+      // DOM references
+      var boardEl = document.getElementById('nim-board');
+      var turnEl = document.getElementById('turn-indicator');
+      var hintEl = document.getElementById('selection-hint');
+      var btnConfirm = document.getElementById('btn-confirm');
+      var btnPlayAgain = document.getElementById('btn-play-again');
+      var modeComputerBtn = document.getElementById('mode-computer');
+      var modeHumanBtn = document.getElementById('mode-human');
+      var trophyDisplayEl = document.getElementById('trophy-display');
+      var gameResultEl = document.getElementById('game-result');
+      var resultMessageEl = document.getElementById('result-message');
+      var trophyMessageEl = document.getElementById('trophy-message');
+      var celebrationEl = document.getElementById('celebration');
+      var helpOverlayEl = document.getElementById('help-overlay');
+      var helpBtnEl = document.getElementById('help-btn');
+      var helpCloseBtnEl = document.getElementById('help-close-btn');
+
+      // ---- Board Rendering ----
+
+      function renderBoard() {
+        boardEl.innerHTML = '';
+        for (var r = 0; r < rows.length; r++) {
+          var rowDiv = document.createElement('div');
+          rowDiv.className = 'nim-row';
+          for (var c = 0; c < INITIAL_ROWS[r]; c++) {
+            var stone = document.createElement('div');
+            stone.className = 'stone';
+            var state = stoneStates[r][c];
+            if (state === 'removed') {
+              stone.classList.add('removed');
+            } else if (state === 'selected') {
+              stone.classList.add('selected');
+            }
+            // Disable stones in other rows when a row is selected
+            if (selectedRow !== -1 && selectedRow !== r && state !== 'removed') {
+              stone.classList.add('disabled');
+            }
+            // Disable all stones during computer turn or game over
+            if (computerThinking || gameOver) {
+              stone.classList.add('disabled');
+            }
+            stone.dataset.row = r;
+            stone.dataset.col = c;
+            stone.addEventListener('click', onStoneClick);
+            rowDiv.appendChild(stone);
+          }
+          boardEl.appendChild(rowDiv);
+        }
+      }
+
+      // ---- Stone Selection ----
+
+      function onStoneClick(e) {
+        if (gameOver || computerThinking) return;
+
+        var stone = e.currentTarget;
+        var r = parseInt(stone.dataset.row);
+        var c = parseInt(stone.dataset.col);
+
+        if (stoneStates[r][c] === 'removed') return;
+
+        // If a different row is already selected, ignore
+        if (selectedRow !== -1 && selectedRow !== r) return;
+
+        // Toggle selection
+        if (stoneStates[r][c] === 'selected') {
+          stoneStates[r][c] = 'present';
+          selectedCount--;
+        } else {
+          stoneStates[r][c] = 'selected';
+          selectedCount++;
+        }
+
+        // Update selected row tracking
+        if (selectedCount === 0) {
+          selectedRow = -1;
+        } else {
+          selectedRow = r;
+        }
+
+        updateConfirmButton();
+        updateHint();
+        renderBoard();
+      }
+
+      function clearSelection() {
+        for (var r = 0; r < stoneStates.length; r++) {
+          for (var c = 0; c < stoneStates[r].length; c++) {
+            if (stoneStates[r][c] === 'selected') {
+              stoneStates[r][c] = 'present';
+            }
+          }
+        }
+        selectedRow = -1;
+        selectedCount = 0;
+        updateConfirmButton();
+        updateHint();
+      }
+
+      // ---- Game Actions ----
+
+      function confirmMove() {
+        if (selectedCount === 0 || gameOver || computerThinking) return;
+
+        // Remove selected stones
+        for (var c = 0; c < stoneStates[selectedRow].length; c++) {
+          if (stoneStates[selectedRow][c] === 'selected') {
+            stoneStates[selectedRow][c] = 'removed';
+          }
+        }
+        rows[selectedRow] -= selectedCount;
+
+        selectedRow = -1;
+        selectedCount = 0;
+        updateConfirmButton();
+
+        // Check game over: did this player take the last stone?
+        var totalRemaining = rows[0] + rows[1] + rows[2];
+        if (totalRemaining === 0) {
+          // Current player took the last stone and LOSES
+          endGame(currentPlayer);
+          renderBoard();
+          return;
+        }
+
+        // Switch turns
+        currentPlayer = (currentPlayer === 1) ? 2 : 1;
+        updateTurnIndicator();
+        renderBoard();
+
+        // Computer's turn
+        if (gameMode === 'computer' && currentPlayer === 2) {
+          computerThinking = true;
+          renderBoard();
+          setTimeout(computerMove, 800);
+        }
+      }
+
+      function resetGame() {
+        rows = INITIAL_ROWS.slice();
+        stoneStates = [];
+        for (var r = 0; r < INITIAL_ROWS.length; r++) {
+          var rowStates = [];
+          for (var c = 0; c < INITIAL_ROWS[r]; c++) {
+            rowStates.push('present');
+          }
+          stoneStates.push(rowStates);
+        }
+        selectedRow = -1;
+        selectedCount = 0;
+        currentPlayer = 1;
+        gameOver = false;
+        computerThinking = false;
+
+        gameResultEl.classList.remove('visible');
+        updateConfirmButton();
+        updateTurnIndicator();
+        updateHint();
+        renderBoard();
+      }
+
+      function endGame(loser) {
+        gameOver = true;
+        var winner = (loser === 1) ? 2 : 1;
+
+        if (gameMode === 'computer') {
+          if (loser === 2) {
+            // Human wins
+            resultMessageEl.textContent = 'You win!';
+            resultMessageEl.className = 'result-message win';
+            winStreak++;
+            localStorage.setItem('nim_winStreak', winStreak);
+            var earnedNew = updateTrophy();
+            if (earnedNew) {
+              trophyMessageEl.textContent = trophyLevel.charAt(0).toUpperCase() + trophyLevel.slice(1) + ' trophy earned!';
+              trophyMessageEl.style.display = '';
+              launchConfetti();
+            } else {
+              trophyMessageEl.style.display = 'none';
+            }
+          } else {
+            // Human loses
+            resultMessageEl.textContent = 'Computer wins!';
+            resultMessageEl.className = 'result-message lose';
+            winStreak = 0;
+            localStorage.setItem('nim_winStreak', winStreak);
+            trophyMessageEl.style.display = 'none';
+          }
+        } else {
+          // Human vs human
+          var winnerName = 'Player ' + winner;
+          resultMessageEl.textContent = winnerName + ' wins!';
+          resultMessageEl.className = 'result-message win';
+          trophyMessageEl.style.display = 'none';
+        }
+
+        gameResultEl.classList.add('visible');
+        updateTrophyDisplay();
+        updateTurnIndicator();
+      }
+
+      // ---- Computer AI (Misere NIM) ----
+
+      function computerMove() {
+        var move = computeOptimalMove();
+
+        // Randomly pick which specific stones to remove from the row
+        var available = [];
+        for (var c = 0; c < stoneStates[move.row].length; c++) {
+          if (stoneStates[move.row][c] === 'present') {
+            available.push(c);
+          }
+        }
+        // Shuffle available stones and pick move.count of them
+        shuffle(available);
+        var toRemove = available.slice(0, move.count);
+
+        // Show computer's selection visually
+        for (var i = 0; i < toRemove.length; i++) {
+          stoneStates[move.row][toRemove[i]] = 'selected';
+        }
+        renderBoard();
+        // Highlight with computer-pick class
+        var stones = boardEl.querySelectorAll('.stone.selected');
+        for (var i = 0; i < stones.length; i++) {
+          stones[i].classList.remove('selected');
+          stones[i].classList.add('computer-pick');
+        }
+
+        // After a brief pause, actually remove them
+        setTimeout(function() {
+          for (var i = 0; i < toRemove.length; i++) {
+            stoneStates[move.row][toRemove[i]] = 'removed';
+          }
+          rows[move.row] -= move.count;
+
+          computerThinking = false;
+
+          // Check game over
+          var totalRemaining = rows[0] + rows[1] + rows[2];
+          if (totalRemaining === 0) {
+            endGame(2); // Computer took last stone, computer loses
+            renderBoard();
+            return;
+          }
+
+          currentPlayer = 1;
+          updateTurnIndicator();
+          updateHint();
+          renderBoard();
+        }, 600);
+      }
+
+      // Returns true if the position is a losing position for the player to move (misere)
+      function isLosingPosition(r) {
+        var allZeroOrOne = true;
+        var heapsWithOne = 0;
+        var nimSum = 0;
+        for (var i = 0; i < r.length; i++) {
+          nimSum ^= r[i];
+          if (r[i] > 1) allZeroOrOne = false;
+          if (r[i] === 1) heapsWithOne++;
+        }
+        if (allZeroOrOne) {
+          // Endgame: odd number of 1-heaps is LOSING in misere
+          // (you'll be forced to take the last one)
+          return heapsWithOne % 2 === 1;
+        }
+        // Standard phase: nim-sum 0 is losing (same as normal Nim)
+        return nimSum === 0;
+      }
+
+      function computeOptimalMove() {
+        // Try all possible moves; find ones that leave opponent in a losing position
+        var goodMoves = [];
+        for (var i = 0; i < rows.length; i++) {
+          if (rows[i] === 0) continue;
+          for (var take = 1; take <= rows[i]; take++) {
+            var tempRows = rows.slice();
+            tempRows[i] -= take;
+            if (isLosingPosition(tempRows)) {
+              goodMoves.push({ row: i, count: take });
+            }
+          }
+        }
+
+        if (goodMoves.length > 0) {
+          return goodMoves[Math.floor(Math.random() * goodMoves.length)];
+        }
+
+        // No winning move — we're in a losing position, make a random move
+        return randomMove();
+      }
+
+      function randomMove() {
+        var legalRows = [];
+        for (var i = 0; i < rows.length; i++) {
+          if (rows[i] > 0) legalRows.push(i);
+        }
+        var row = legalRows[Math.floor(Math.random() * legalRows.length)];
+        var count = Math.floor(Math.random() * rows[row]) + 1;
+        return { row: row, count: count };
+      }
+
+      function shuffle(arr) {
+        for (var i = arr.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var tmp = arr[i];
+          arr[i] = arr[j];
+          arr[j] = tmp;
+        }
+      }
+
+      // ---- Trophy System ----
+
+      function updateTrophy() {
+        var newLevel = '';
+        if (winStreak >= 5) newLevel = 'gold';
+        else if (winStreak >= 3) newLevel = 'silver';
+        else if (winStreak >= 1) newLevel = 'bronze';
+
+        var levels = { '': 0, 'bronze': 1, 'silver': 2, 'gold': 3 };
+        if (levels[newLevel] > levels[trophyLevel]) {
+          trophyLevel = newLevel;
+          localStorage.setItem('nim_trophyLevel', trophyLevel);
+          return true;
+        }
+        return false;
+      }
+
+      function updateTrophyDisplay() {
+        if (gameMode !== 'computer') {
+          trophyDisplayEl.style.display = 'none';
+          return;
+        }
+        trophyDisplayEl.style.display = '';
+
+        if (trophyLevel === 'gold') {
+          trophyDisplayEl.innerHTML = '<span class="trophy-level gold">&#x1F3C6; Gold Trophy</span>' +
+            '<div class="streak-info">Win streak: ' + winStreak + '</div>';
+        } else if (trophyLevel === 'silver') {
+          trophyDisplayEl.innerHTML = '<span class="trophy-level silver">&#x1F3C6; Silver Trophy</span>' +
+            '<div class="streak-info">Win streak: ' + winStreak + ' (5 in a row for Gold)</div>';
+        } else if (trophyLevel === 'bronze') {
+          trophyDisplayEl.innerHTML = '<span class="trophy-level bronze">&#x1F3C6; Bronze Trophy</span>' +
+            '<div class="streak-info">Win streak: ' + winStreak + ' (3 in a row for Silver)</div>';
+        } else {
+          trophyDisplayEl.innerHTML = 'Beat the computer to earn trophies!<div class="streak-info">Win streak: ' + winStreak + '</div>';
+        }
+      }
+
+      // ---- UI Updates ----
+
+      function updateTurnIndicator() {
+        if (gameOver) {
+          turnEl.textContent = 'Game Over';
+          turnEl.className = 'turn-indicator';
+          return;
+        }
+        if (gameMode === 'computer') {
+          if (currentPlayer === 1) {
+            turnEl.textContent = 'Your Turn';
+            turnEl.className = 'turn-indicator player1';
+          } else {
+            turnEl.textContent = 'Computer is thinking\u2026';
+            turnEl.className = 'turn-indicator thinking';
+          }
+        } else {
+          if (currentPlayer === 1) {
+            turnEl.textContent = "Player 1's Turn";
+            turnEl.className = 'turn-indicator player1';
+          } else {
+            turnEl.textContent = "Player 2's Turn";
+            turnEl.className = 'turn-indicator player2';
+          }
+        }
+      }
+
+      function updateConfirmButton() {
+        btnConfirm.disabled = (selectedCount === 0 || gameOver || computerThinking);
+      }
+
+      function updateHint() {
+        if (gameOver) {
+          hintEl.textContent = '';
+        } else if (computerThinking) {
+          hintEl.textContent = '';
+        } else if (selectedCount > 0) {
+          hintEl.textContent = selectedCount + ' stone' + (selectedCount > 1 ? 's' : '') + ' selected from row ' + (selectedRow + 1);
+        } else {
+          hintEl.textContent = 'Click stones in a row to select them';
+        }
+      }
+
+      // ---- Mode Switching ----
+
+      function switchMode(mode) {
+        gameMode = mode;
+        if (mode === 'computer') {
+          modeComputerBtn.classList.add('active');
+          modeHumanBtn.classList.remove('active');
+        } else {
+          modeHumanBtn.classList.add('active');
+          modeComputerBtn.classList.remove('active');
+        }
+        updateTrophyDisplay();
+        resetGame();
+      }
+
+      // ---- Confetti ----
+
+      function launchConfetti() {
+        var colors = ['#7c3aed', '#f59e0b', '#10b981', '#ec4899', '#3b82f6'];
+        for (var i = 0; i < 80; i++) {
+          var confetti = document.createElement('div');
+          confetti.className = 'confetti';
+          confetti.style.left = Math.random() * 100 + '%';
+          confetti.style.top = '-10px';
+          confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          confetti.style.animation = 'confettiFall ' + (1 + Math.random()) + 's ease-out forwards';
+          confetti.style.animationDelay = Math.random() * 0.5 + 's';
+          celebrationEl.appendChild(confetti);
+        }
+        setTimeout(function() {
+          celebrationEl.innerHTML = '';
+        }, 2500);
+      }
+
+      // ---- Help Dialog ----
+
+      function showHelp() {
+        helpOverlayEl.classList.add('visible');
+      }
+
+      function hideHelp() {
+        helpOverlayEl.classList.remove('visible');
+        localStorage.setItem('nim_helpSeen', 'true');
+      }
+
+      // ---- Event Listeners ----
+
+      btnConfirm.addEventListener('click', function(e) {
+        e.preventDefault();
+        btnConfirm.blur();
+        confirmMove();
+      });
+
+      btnPlayAgain.addEventListener('click', function(e) {
+        e.preventDefault();
+        resetGame();
+      });
+
+      modeComputerBtn.addEventListener('click', function() {
+        switchMode('computer');
+      });
+
+      modeHumanBtn.addEventListener('click', function() {
+        switchMode('human');
+      });
+
+      helpBtnEl.addEventListener('click', showHelp);
+      helpCloseBtnEl.addEventListener('click', hideHelp);
+      helpOverlayEl.addEventListener('click', function(e) {
+        if (e.target === helpOverlayEl) {
+          hideHelp();
+        }
+      });
+
+      // ---- Init ----
+
+      resetGame();
+      updateTrophyDisplay();
+
+      if (!localStorage.getItem('nim_helpSeen')) {
+        showHelp();
+      }
+    })();
+  </script>
+</body>
+</html>
