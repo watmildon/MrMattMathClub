@@ -72,6 +72,12 @@
         <p>Take turns removing stones. Don't take the last one!</p>
       </a>
 
+      <a href="activities/dots-and-boxes.html" class="card dots-and-boxes">
+        <span class="icon">&#x1F532;</span>
+        <h2>Dots and Boxes</h2>
+        <p>Draw lines to claim boxes. Get the most to win!</p>
+      </a>
+
       <a href="activities/four-coloring.html" class="card four-coloring">
         <span class="icon">&#x1F3A8;</span>
         <h2>Four Coloring (Practice)</h2>
@@ -280,6 +286,30 @@
       badge.className = 'card-badge trophy-bronze';
       badge.innerHTML = trophySvg('#b45309') + 'Bronze';
       nimCard.appendChild(badge);
+    }
+  })();
+
+  // Dots and Boxes trophy badge
+  (function() {
+    var dabCard = document.querySelector('.dots-and-boxes');
+    if (!dabCard) return;
+
+    var dabTrophy = localStorage.getItem('dotsAndBoxes_trophyLevel');
+    if (dabTrophy === 'gold') {
+      var badge = document.createElement('span');
+      badge.className = 'card-badge trophy-gold';
+      badge.innerHTML = trophySvg('#f59e0b') + 'Gold!';
+      dabCard.appendChild(badge);
+    } else if (dabTrophy === 'silver') {
+      var badge = document.createElement('span');
+      badge.className = 'card-badge trophy-silver';
+      badge.innerHTML = trophySvg('#94a3b8') + 'Silver';
+      dabCard.appendChild(badge);
+    } else if (dabTrophy === 'bronze') {
+      var badge = document.createElement('span');
+      badge.className = 'card-badge trophy-bronze';
+      badge.innerHTML = trophySvg('#b45309') + 'Bronze';
+      dabCard.appendChild(badge);
     }
   })();
 </script>

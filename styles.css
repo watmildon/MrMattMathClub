@@ -97,6 +97,7 @@ main {
 .card.number-bonds     { border-top: 4px solid #3b82f6; }
 .card.dice-bingo       { border-top: 4px solid #8b5cf6; }
 .card.nim              { border-top: 4px solid #10b981; }
+.card.dots-and-boxes   { border-top: 4px solid #f97316; }
 
 /* ---- Activity Page Layout ---- */
 

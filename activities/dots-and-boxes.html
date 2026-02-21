@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dots and Boxes - Mr. Matt Math Club</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237c3aed'/><text x='50' y='76' font-size='80' font-weight='bold' text-anchor='middle' fill='white'>M</text></svg>">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    .back-row {
+      max-width: 520px;
+      display: flex;
+      align-items: center;
+    }
+
+    .game-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem 1.5rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* Mode toggle */
+    .mode-selector {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .mode-btn {
+      border: 2px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: white;
+      color: #64748b;
+      transition: all 0.15s;
+    }
+
+    .mode-btn:hover {
+      border-color: #7c3aed;
+    }
+
+    .mode-btn.active {
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      color: white;
+      border-color: #7c3aed;
+    }
+
+    /* Trophy display */
+    .trophy-display {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.95rem;
+      color: #64748b;
+    }
+
+    .trophy-level {
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .trophy-level.bronze { color: #b45309; }
+    .trophy-level.silver { color: #94a3b8; }
+    .trophy-level.gold   { color: #f59e0b; }
+
+    .streak-info {
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+    }
+
+    /* Turn indicator */
+    .turn-indicator {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      min-height: 1.5em;
+      transition: color 0.2s;
+    }
+
+    .turn-indicator.player1 { color: #7c3aed; }
+    .turn-indicator.player2 { color: #f97316; }
+    .turn-indicator.thinking { color: #94a3b8; }
+
+    /* Scoreboard */
+    .scoreboard {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .score-item {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .score-item.player1 { color: #7c3aed; }
+    .score-item.player2 { color: #f97316; }
+
+    .score-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    /* Board */
+    .board-container {
+      display: flex;
+      justify-content: center;
+      margin: 1rem 0 1.5rem;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .board-container svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Dots */
+    .dot {
+      fill: #1e293b;
+    }
+
+    /* Lines (edges) */
+    .edge-hit {
+      stroke: transparent;
+      stroke-width: 14;
+      cursor: pointer;
+      fill: none;
+    }
+
+    .edge-hit:hover {
+      stroke: rgba(124, 58, 237, 0.2);
+    }
+
+    .edge-hit.taken {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .edge-hit.disabled {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .edge-line {
+      stroke: #cbd5e1;
+      stroke-width: 2;
+      stroke-linecap: round;
+      fill: none;
+    }
+
+    .edge-line.player1 {
+      stroke: #7c3aed;
+      stroke-width: 6;
+      stroke-linecap: round;
+    }
+
+    .edge-line.player2 {
+      stroke: #f97316;
+      stroke-width: 6;
+      stroke-linecap: round;
+    }
+
+    /* Box fills */
+    .box-fill.player1 {
+      fill: rgba(124, 58, 237, 0.15);
+    }
+
+    .box-fill.player2 {
+      fill: rgba(249, 115, 22, 0.15);
+    }
+
+    .box-initial {
+      font-size: 14px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+    }
+
+    .box-initial.player1 { fill: #7c3aed; }
+    .box-initial.player2 { fill: #f97316; }
+
+    /* Game result */
+    .game-result {
+      margin-top: 1rem;
+      padding: 1.5rem;
+      background: #f8fafc;
+      border-radius: 12px;
+      display: none;
+      animation: popIn 0.3s ease;
+    }
+
+    .game-result.visible {
+      display: block;
+    }
+
+    .result-message {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .result-message.win  { color: #10b981; }
+    .result-message.lose { color: #f59e0b; }
+    .result-message.tie  { color: #64748b; }
+
+    .result-detail {
+      font-size: 1rem;
+      color: #64748b;
+      margin-bottom: 0.5rem;
+    }
+
+    .trophy-message {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #7c3aed;
+      margin-bottom: 0.75rem;
+    }
+
+    .result-play-again {
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0.75rem 2rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s;
+      margin-top: 0.5rem;
+    }
+
+    .result-play-again:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    @keyframes popIn {
+      0%   { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Help button */
+    .help-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #7c3aed;
+      color: white;
+      border: none;
+      font-size: 1.25rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s, box-shadow 0.15s;
+      margin-left: auto;
+    }
+
+    .help-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Help dialog overlay */
+    .help-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      padding: 1rem;
+    }
+
+    .help-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .help-dialog {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      max-width: 400px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      transform: scale(0.9);
+      transition: transform 0.2s;
+    }
+
+    .help-overlay.visible .help-dialog {
+      transform: scale(1);
+    }
+
+    .help-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .help-section {
+      margin-bottom: 1rem;
+    }
+
+    .help-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+
+    .help-section p,
+    .help-section li {
+      font-size: 0.95rem;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    .help-section ul {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    .help-section li {
+      margin-bottom: 0.25rem;
+    }
+
+    .help-close-btn {
+      display: block;
+      width: 100%;
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: transform 0.15s;
+    }
+
+    .help-close-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Celebration */
+    .celebration {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      z-index: 100;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      opacity: 0;
+    }
+
+    @keyframes confettiFall {
+      0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(400px) rotate(720deg); }
+    }
+  </style>
+</head>
+<body>
+  <header><h1>Mr. Matt Math Club</h1></header>
+  <main>
+    <div class="back-row">
+      <a href="../index.html" class="back-btn" aria-label="Back to Activities">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 10H5M5 10l5-5M5 10l5 5"/>
+        </svg>
+      </a>
+      <button class="help-btn" id="help-btn" aria-label="Help">?</button>
+    </div>
+
+    <!-- Help Dialog -->
+    <div class="help-overlay" id="help-overlay">
+      <div class="help-dialog">
+        <div class="help-title">How to Play Dots and Boxes</div>
+
+        <div class="help-section">
+          <h3>1. Draw Lines</h3>
+          <p>On your turn, click between two dots to draw a line (up/down or left/right).</p>
+        </div>
+
+        <div class="help-section">
+          <h3>2. Complete Boxes</h3>
+          <p>If your line completes the 4th side of a box, you claim that box and <strong>get another turn!</strong></p>
+        </div>
+
+        <div class="help-section">
+          <h3>3. Winning</h3>
+          <p>When all boxes are claimed, the player with the <strong>most boxes wins!</strong></p>
+        </div>
+
+        <div class="help-section">
+          <h3>4. Modes</h3>
+          <ul>
+            <li><strong>vs Computer:</strong> You go first.</li>
+            <li><strong>vs Friend:</strong> Take turns with a friend on the same device.</li>
+          </ul>
+        </div>
+
+        <div class="help-section">
+          <h3>5. Trophies (vs Computer)</h3>
+          <ul>
+            <li><strong>Bronze:</strong> Beat the computer once</li>
+            <li><strong>Silver:</strong> Beat it 3 times in a row</li>
+            <li><strong>Gold:</strong> Beat it 5 times in a row</li>
+          </ul>
+          <p>Is there a winning strategy??</p>
+        </div>
+
+        <button class="help-close-btn" id="help-close-btn">Got it!</button>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <h2 class="activity-title">Dots and Boxes</h2>
+
+      <div class="mode-selector">
+        <button class="mode-btn active" id="mode-computer">vs Computer</button>
+        <button class="mode-btn" id="mode-human">vs Friend</button>
+      </div>
+
+      <div class="trophy-display" id="trophy-display">
+        Beat the computer to earn trophies!
+      </div>
+
+      <div class="turn-indicator player1" id="turn-indicator">Your Turn</div>
+
+      <div class="scoreboard">
+        <div class="score-item player1">
+          <div id="score-label-1">You</div>
+          <div class="score-value" id="score-1">0</div>
+        </div>
+        <div class="score-item player2">
+          <div id="score-label-2">Computer</div>
+          <div class="score-value" id="score-2">0</div>
+        </div>
+      </div>
+
+      <div class="board-container" id="board-container"></div>
+
+      <div class="game-result" id="game-result">
+        <div class="result-message" id="result-message"></div>
+        <div class="result-detail" id="result-detail"></div>
+        <div class="trophy-message" id="trophy-message"></div>
+        <button class="result-play-again" id="btn-play-again">Play Again</button>
+      </div>
+    </div>
+
+    <div class="celebration" id="celebration"></div>
+  </main>
+
+  <script>
+    (function() {
+      // Grid: 5 columns x 4 rows of dots (matching the game sheet)
+      var COLS = 5;
+      var ROWS = 4;
+      var TOTAL_BOXES = (COLS - 1) * (ROWS - 1); // 12 boxes
+
+      // SVG layout constants
+      var DOT_R = 5;
+      var SPACING = 60;
+      var PAD = 20;
+      var SVG_W = PAD * 2 + (COLS - 1) * SPACING;
+      var SVG_H = PAD * 2 + (ROWS - 1) * SPACING;
+
+      // Game state
+      // Edges: horizontal edges hEdges[row][col] and vertical edges vEdges[row][col]
+      // hEdges has ROWS arrays of (COLS-1) entries: hEdges[r][c] = 0 (open), 1 (player1), 2 (player2)
+      // vEdges has (ROWS-1) arrays of COLS entries: vEdges[r][c] = 0/1/2
+      var hEdges = [];
+      var vEdges = [];
+      // boxes[r][c] = 0 (unclaimed), 1, 2  -- (ROWS-1) x (COLS-1)
+      var boxes = [];
+      var scores = [0, 0]; // scores[0] = player 1, scores[1] = player 2
+      var currentPlayer = 1;
+      var gameMode = 'computer';
+      var gameOver = false;
+      var computerThinking = false;
+
+      // Trophy state
+      var winStreak = parseInt(localStorage.getItem('dotsAndBoxes_winStreak')) || 0;
+      var trophyLevel = localStorage.getItem('dotsAndBoxes_trophyLevel') || '';
+
+      // DOM references
+      var boardContainerEl = document.getElementById('board-container');
+      var turnEl = document.getElementById('turn-indicator');
+      var score1El = document.getElementById('score-1');
+      var score2El = document.getElementById('score-2');
+      var scoreLabel1El = document.getElementById('score-label-1');
+      var scoreLabel2El = document.getElementById('score-label-2');
+      var modeComputerBtn = document.getElementById('mode-computer');
+      var modeHumanBtn = document.getElementById('mode-human');
+      var trophyDisplayEl = document.getElementById('trophy-display');
+      var gameResultEl = document.getElementById('game-result');
+      var resultMessageEl = document.getElementById('result-message');
+      var resultDetailEl = document.getElementById('result-detail');
+      var trophyMessageEl = document.getElementById('trophy-message');
+      var btnPlayAgain = document.getElementById('btn-play-again');
+      var celebrationEl = document.getElementById('celebration');
+      var helpOverlayEl = document.getElementById('help-overlay');
+      var helpBtnEl = document.getElementById('help-btn');
+      var helpCloseBtnEl = document.getElementById('help-close-btn');
+
+      // ---- Board Logic ----
+
+      function initState() {
+        hEdges = [];
+        for (var r = 0; r < ROWS; r++) {
+          var row = [];
+          for (var c = 0; c < COLS - 1; c++) row.push(0);
+          hEdges.push(row);
+        }
+        vEdges = [];
+        for (var r = 0; r < ROWS - 1; r++) {
+          var row = [];
+          for (var c = 0; c < COLS; c++) row.push(0);
+          vEdges.push(row);
+        }
+        boxes = [];
+        for (var r = 0; r < ROWS - 1; r++) {
+          var row = [];
+          for (var c = 0; c < COLS - 1; c++) row.push(0);
+          boxes.push(row);
+        }
+        scores = [0, 0];
+        currentPlayer = 1;
+        gameOver = false;
+        computerThinking = false;
+      }
+
+      // Count how many sides a box has filled
+      function boxSideCount(r, c) {
+        var count = 0;
+        // top: hEdges[r][c]
+        if (hEdges[r][c]) count++;
+        // bottom: hEdges[r+1][c]
+        if (hEdges[r + 1][c]) count++;
+        // left: vEdges[r][c]
+        if (vEdges[r][c]) count++;
+        // right: vEdges[r][c+1]
+        if (vEdges[r][c + 1]) count++;
+        return count;
+      }
+
+      // Place an edge and check for completed boxes. Returns number of boxes completed.
+      function placeEdge(type, r, c, player) {
+        if (type === 'h') {
+          hEdges[r][c] = player;
+        } else {
+          vEdges[r][c] = player;
+        }
+
+        var completed = 0;
+
+        if (type === 'h') {
+          // Horizontal edge at row r, col c affects:
+          // Box above: (r-1, c) if r > 0
+          if (r > 0 && boxes[r - 1][c] === 0 && boxSideCount(r - 1, c) === 4) {
+            boxes[r - 1][c] = player;
+            scores[player - 1]++;
+            completed++;
+          }
+          // Box below: (r, c) if r < ROWS - 1
+          if (r < ROWS - 1 && boxes[r][c] === 0 && boxSideCount(r, c) === 4) {
+            boxes[r][c] = player;
+            scores[player - 1]++;
+            completed++;
+          }
+        } else {
+          // Vertical edge at row r, col c affects:
+          // Box left: (r, c-1) if c > 0
+          if (c > 0 && boxes[r][c - 1] === 0 && boxSideCount(r, c - 1) === 4) {
+            boxes[r][c - 1] = player;
+            scores[player - 1]++;
+            completed++;
+          }
+          // Box right: (r, c) if c < COLS - 1
+          if (c < COLS - 1 && boxes[r][c] === 0 && boxSideCount(r, c) === 4) {
+            boxes[r][c] = player;
+            scores[player - 1]++;
+            completed++;
+          }
+        }
+
+        return completed;
+      }
+
+      // Get all available (unfilled) edges
+      function getAvailableEdges() {
+        var edges = [];
+        for (var r = 0; r < ROWS; r++) {
+          for (var c = 0; c < COLS - 1; c++) {
+            if (!hEdges[r][c]) edges.push({ type: 'h', r: r, c: c });
+          }
+        }
+        for (var r = 0; r < ROWS - 1; r++) {
+          for (var c = 0; c < COLS; c++) {
+            if (!vEdges[r][c]) edges.push({ type: 'v', r: r, c: c });
+          }
+        }
+        return edges;
+      }
+
+      function isGameOver() {
+        return scores[0] + scores[1] === TOTAL_BOXES;
+      }
+
+      // ---- SVG Rendering ----
+
+      function dotX(c) { return PAD + c * SPACING; }
+      function dotY(r) { return PAD + r * SPACING; }
+
+      function renderBoard() {
+        var ns = 'http://www.w3.org/2000/svg';
+        var svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('viewBox', '0 0 ' + SVG_W + ' ' + SVG_H);
+        svg.setAttribute('width', SVG_W);
+        svg.setAttribute('height', SVG_H);
+
+        // Draw box fills
+        for (var r = 0; r < ROWS - 1; r++) {
+          for (var c = 0; c < COLS - 1; c++) {
+            if (boxes[r][c] !== 0) {
+              var rect = document.createElementNS(ns, 'rect');
+              rect.setAttribute('x', dotX(c));
+              rect.setAttribute('y', dotY(r));
+              rect.setAttribute('width', SPACING);
+              rect.setAttribute('height', SPACING);
+              rect.setAttribute('class', 'box-fill player' + boxes[r][c]);
+              svg.appendChild(rect);
+
+              // Player initial in the box
+              var txt = document.createElementNS(ns, 'text');
+              txt.setAttribute('x', dotX(c) + SPACING / 2);
+              txt.setAttribute('y', dotY(r) + SPACING / 2);
+              txt.setAttribute('class', 'box-initial player' + boxes[r][c]);
+              if (gameMode === 'computer') {
+                txt.textContent = boxes[r][c] === 1 ? 'Y' : 'C';
+              } else {
+                txt.textContent = boxes[r][c] === 1 ? '1' : '2';
+              }
+              svg.appendChild(txt);
+            }
+          }
+        }
+
+        // Draw edge lines (background placeholders for all edges)
+        for (var r = 0; r < ROWS; r++) {
+          for (var c = 0; c < COLS - 1; c++) {
+            var line = document.createElementNS(ns, 'line');
+            line.setAttribute('x1', dotX(c));
+            line.setAttribute('y1', dotY(r));
+            line.setAttribute('x2', dotX(c + 1));
+            line.setAttribute('y2', dotY(r));
+            var cls = 'edge-line';
+            if (hEdges[r][c]) cls += ' player' + hEdges[r][c];
+            line.setAttribute('class', cls);
+            svg.appendChild(line);
+          }
+        }
+        for (var r = 0; r < ROWS - 1; r++) {
+          for (var c = 0; c < COLS; c++) {
+            var line = document.createElementNS(ns, 'line');
+            line.setAttribute('x1', dotX(c));
+            line.setAttribute('y1', dotY(r));
+            line.setAttribute('x2', dotX(c));
+            line.setAttribute('y2', dotY(r + 1));
+            var cls = 'edge-line';
+            if (vEdges[r][c]) cls += ' player' + vEdges[r][c];
+            line.setAttribute('class', cls);
+            svg.appendChild(line);
+          }
+        }
+
+        // Draw clickable hit areas for available edges
+        if (!gameOver) {
+          // Horizontal edges
+          for (var r = 0; r < ROWS; r++) {
+            for (var c = 0; c < COLS - 1; c++) {
+              var hitLine = document.createElementNS(ns, 'line');
+              hitLine.setAttribute('x1', dotX(c));
+              hitLine.setAttribute('y1', dotY(r));
+              hitLine.setAttribute('x2', dotX(c + 1));
+              hitLine.setAttribute('y2', dotY(r));
+              var hitCls = 'edge-hit';
+              if (hEdges[r][c]) {
+                hitCls += ' taken';
+              } else if (computerThinking) {
+                hitCls += ' disabled';
+              }
+              hitLine.setAttribute('class', hitCls);
+              hitLine.dataset.type = 'h';
+              hitLine.dataset.r = r;
+              hitLine.dataset.c = c;
+              if (!hEdges[r][c] && !computerThinking) {
+                hitLine.addEventListener('click', onEdgeClick);
+              }
+              svg.appendChild(hitLine);
+            }
+          }
+          // Vertical edges
+          for (var r = 0; r < ROWS - 1; r++) {
+            for (var c = 0; c < COLS; c++) {
+              var hitLine = document.createElementNS(ns, 'line');
+              hitLine.setAttribute('x1', dotX(c));
+              hitLine.setAttribute('y1', dotY(r));
+              hitLine.setAttribute('x2', dotX(c));
+              hitLine.setAttribute('y2', dotY(r + 1));
+              var hitCls = 'edge-hit';
+              if (vEdges[r][c]) {
+                hitCls += ' taken';
+              } else if (computerThinking) {
+                hitCls += ' disabled';
+              }
+              hitLine.setAttribute('class', hitCls);
+              hitLine.dataset.type = 'v';
+              hitLine.dataset.r = r;
+              hitLine.dataset.c = c;
+              if (!vEdges[r][c] && !computerThinking) {
+                hitLine.addEventListener('click', onEdgeClick);
+              }
+              svg.appendChild(hitLine);
+            }
+          }
+        }
+
+        // Draw dots on top
+        for (var r = 0; r < ROWS; r++) {
+          for (var c = 0; c < COLS; c++) {
+            var dot = document.createElementNS(ns, 'circle');
+            dot.setAttribute('cx', dotX(c));
+            dot.setAttribute('cy', dotY(r));
+            dot.setAttribute('r', DOT_R);
+            dot.setAttribute('class', 'dot');
+            svg.appendChild(dot);
+          }
+        }
+
+        boardContainerEl.innerHTML = '';
+        boardContainerEl.appendChild(svg);
+      }
+
+      // ---- Player Actions ----
+
+      function onEdgeClick(e) {
+        if (gameOver || computerThinking) return;
+        var el = e.currentTarget;
+        var type = el.dataset.type;
+        var r = parseInt(el.dataset.r);
+        var c = parseInt(el.dataset.c);
+
+        // Verify edge is available
+        if (type === 'h' && hEdges[r][c]) return;
+        if (type === 'v' && vEdges[r][c]) return;
+
+        makeMove(type, r, c, currentPlayer);
+      }
+
+      function makeMove(type, r, c, player) {
+        var completed = placeEdge(type, r, c, player);
+        updateScores();
+        renderBoard();
+
+        if (isGameOver()) {
+          endGame();
+          return;
+        }
+
+        if (completed > 0) {
+          // Player completed a box: gets another turn
+          if (gameMode === 'computer' && player === 2) {
+            // Computer gets another turn
+            computerThinking = true;
+            renderBoard();
+            setTimeout(computerMove, 500);
+          }
+          // If human completed a box, they just click again (no turn switch)
+          return;
+        }
+
+        // Switch turns
+        currentPlayer = (currentPlayer === 1) ? 2 : 1;
+        updateTurnIndicator();
+
+        if (gameMode === 'computer' && currentPlayer === 2) {
+          computerThinking = true;
+          renderBoard();
+          setTimeout(computerMove, 600);
+        }
+      }
+
+      // ---- Computer AI ----
+
+      function computerMove() {
+        var available = getAvailableEdges();
+        if (available.length === 0) return;
+
+        var move = chooseComputerMove(available);
+        var completed = placeEdge(move.type, move.r, move.c, 2);
+        updateScores();
+        renderBoard();
+
+        if (isGameOver()) {
+          computerThinking = false;
+          endGame();
+          return;
+        }
+
+        if (completed > 0) {
+          // Computer completed a box, gets another turn
+          setTimeout(computerMove, 500);
+          return;
+        }
+
+        // Switch to human
+        computerThinking = false;
+        currentPlayer = 1;
+        updateTurnIndicator();
+        renderBoard();
+      }
+
+      function chooseComputerMove(available) {
+        // 1. Look for moves that complete a box (3 sides already filled)
+        var completingMoves = [];
+        for (var i = 0; i < available.length; i++) {
+          var e = available[i];
+          if (wouldCompleteBox(e.type, e.r, e.c)) {
+            completingMoves.push(e);
+          }
+        }
+        if (completingMoves.length > 0) {
+          return completingMoves[Math.floor(Math.random() * completingMoves.length)];
+        }
+
+        // 2. Avoid moves that give opponent a box (leave box at 3 sides)
+        var safeMoves = [];
+        for (var i = 0; i < available.length; i++) {
+          var e = available[i];
+          if (!wouldSetupBox(e.type, e.r, e.c)) {
+            safeMoves.push(e);
+          }
+        }
+        if (safeMoves.length > 0) {
+          return safeMoves[Math.floor(Math.random() * safeMoves.length)];
+        }
+
+        // 3. No safe moves; all moves give opponent a box. Pick one randomly.
+        return available[Math.floor(Math.random() * available.length)];
+      }
+
+      // Would placing this edge complete at least one box?
+      function wouldCompleteBox(type, r, c) {
+        if (type === 'h') {
+          // Check box above (r-1, c)
+          if (r > 0 && boxes[r - 1][c] === 0 && boxSideCount(r - 1, c) === 3) return true;
+          // Check box below (r, c)
+          if (r < ROWS - 1 && boxes[r][c] === 0 && boxSideCount(r, c) === 3) return true;
+        } else {
+          // Check box left (r, c-1)
+          if (c > 0 && boxes[r][c - 1] === 0 && boxSideCount(r, c - 1) === 3) return true;
+          // Check box right (r, c)
+          if (c < COLS - 1 && boxes[r][c] === 0 && boxSideCount(r, c) === 3) return true;
+        }
+        return false;
+      }
+
+      // Would placing this edge bring any adjacent unclaimed box to 3 sides (setting up opponent)?
+      function wouldSetupBox(type, r, c) {
+        if (type === 'h') {
+          if (r > 0 && boxes[r - 1][c] === 0 && boxSideCount(r - 1, c) === 2) return true;
+          if (r < ROWS - 1 && boxes[r][c] === 0 && boxSideCount(r, c) === 2) return true;
+        } else {
+          if (c > 0 && boxes[r][c - 1] === 0 && boxSideCount(r, c - 1) === 2) return true;
+          if (c < COLS - 1 && boxes[r][c] === 0 && boxSideCount(r, c) === 2) return true;
+        }
+        return false;
+      }
+
+      // ---- Game End ----
+
+      function endGame() {
+        gameOver = true;
+        computerThinking = false;
+
+        var s1 = scores[0];
+        var s2 = scores[1];
+
+        if (gameMode === 'computer') {
+          resultDetailEl.textContent = 'You: ' + s1 + ' \u2014 Computer: ' + s2;
+          if (s1 > s2) {
+            resultMessageEl.textContent = 'You win!';
+            resultMessageEl.className = 'result-message win';
+            winStreak++;
+            localStorage.setItem('dotsAndBoxes_winStreak', winStreak);
+            var earnedNew = updateTrophy();
+            if (earnedNew) {
+              trophyMessageEl.textContent = trophyLevel.charAt(0).toUpperCase() + trophyLevel.slice(1) + ' trophy earned!';
+              trophyMessageEl.style.display = '';
+              launchConfetti();
+            } else {
+              trophyMessageEl.style.display = 'none';
+            }
+          } else if (s2 > s1) {
+            resultMessageEl.textContent = 'Computer wins!';
+            resultMessageEl.className = 'result-message lose';
+            winStreak = 0;
+            localStorage.setItem('dotsAndBoxes_winStreak', winStreak);
+            trophyMessageEl.style.display = 'none';
+          } else {
+            resultMessageEl.textContent = "It's a tie!";
+            resultMessageEl.className = 'result-message tie';
+            winStreak = 0;
+            localStorage.setItem('dotsAndBoxes_winStreak', winStreak);
+            trophyMessageEl.style.display = 'none';
+          }
+        } else {
+          resultDetailEl.textContent = 'Player 1: ' + s1 + ' \u2014 Player 2: ' + s2;
+          if (s1 > s2) {
+            resultMessageEl.textContent = 'Player 1 wins!';
+            resultMessageEl.className = 'result-message win';
+          } else if (s2 > s1) {
+            resultMessageEl.textContent = 'Player 2 wins!';
+            resultMessageEl.className = 'result-message win';
+          } else {
+            resultMessageEl.textContent = "It's a tie!";
+            resultMessageEl.className = 'result-message tie';
+          }
+          trophyMessageEl.style.display = 'none';
+        }
+
+        gameResultEl.classList.add('visible');
+        updateTrophyDisplay();
+        updateTurnIndicator();
+      }
+
+      function resetGame() {
+        initState();
+        gameResultEl.classList.remove('visible');
+        updateScores();
+        updateTurnIndicator();
+        updateScoreLabels();
+        renderBoard();
+      }
+
+      // ---- Trophy System ----
+
+      function updateTrophy() {
+        var newLevel = '';
+        if (winStreak >= 5) newLevel = 'gold';
+        else if (winStreak >= 3) newLevel = 'silver';
+        else if (winStreak >= 1) newLevel = 'bronze';
+
+        var levels = { '': 0, 'bronze': 1, 'silver': 2, 'gold': 3 };
+        if (levels[newLevel] > levels[trophyLevel]) {
+          trophyLevel = newLevel;
+          localStorage.setItem('dotsAndBoxes_trophyLevel', trophyLevel);
+          return true;
+        }
+        return false;
+      }
+
+      function updateTrophyDisplay() {
+        if (gameMode !== 'computer') {
+          trophyDisplayEl.style.display = 'none';
+          return;
+        }
+        trophyDisplayEl.style.display = '';
+
+        if (trophyLevel === 'gold') {
+          trophyDisplayEl.innerHTML = '<span class="trophy-level gold">&#x1F3C6; Gold Trophy</span>' +
+            '<div class="streak-info">Win streak: ' + winStreak + '</div>';
+        } else if (trophyLevel === 'silver') {
+          trophyDisplayEl.innerHTML = '<span class="trophy-level silver">&#x1F3C6; Silver Trophy</span>' +
+            '<div class="streak-info">Win streak: ' + winStreak + ' (5 in a row for Gold)</div>';
+        } else if (trophyLevel === 'bronze') {
+          trophyDisplayEl.innerHTML = '<span class="trophy-level bronze">&#x1F3C6; Bronze Trophy</span>' +
+            '<div class="streak-info">Win streak: ' + winStreak + ' (3 in a row for Silver)</div>';
+        } else {
+          trophyDisplayEl.innerHTML = 'Beat the computer to earn trophies!<div class="streak-info">Win streak: ' + winStreak + '</div>';
+        }
+      }
+
+      // ---- UI Updates ----
+
+      function updateTurnIndicator() {
+        if (gameOver) {
+          turnEl.textContent = 'Game Over';
+          turnEl.className = 'turn-indicator';
+          return;
+        }
+        if (gameMode === 'computer') {
+          if (currentPlayer === 1) {
+            turnEl.textContent = 'Your Turn';
+            turnEl.className = 'turn-indicator player1';
+          } else {
+            turnEl.textContent = 'Computer is thinking\u2026';
+            turnEl.className = 'turn-indicator thinking';
+          }
+        } else {
+          if (currentPlayer === 1) {
+            turnEl.textContent = "Player 1's Turn";
+            turnEl.className = 'turn-indicator player1';
+          } else {
+            turnEl.textContent = "Player 2's Turn";
+            turnEl.className = 'turn-indicator player2';
+          }
+        }
+      }
+
+      function updateScores() {
+        score1El.textContent = scores[0];
+        score2El.textContent = scores[1];
+      }
+
+      function updateScoreLabels() {
+        if (gameMode === 'computer') {
+          scoreLabel1El.textContent = 'You';
+          scoreLabel2El.textContent = 'Computer';
+        } else {
+          scoreLabel1El.textContent = 'Player 1';
+          scoreLabel2El.textContent = 'Player 2';
+        }
+      }
+
+      // ---- Mode Switching ----
+
+      function switchMode(mode) {
+        gameMode = mode;
+        if (mode === 'computer') {
+          modeComputerBtn.classList.add('active');
+          modeHumanBtn.classList.remove('active');
+        } else {
+          modeHumanBtn.classList.add('active');
+          modeComputerBtn.classList.remove('active');
+        }
+        updateTrophyDisplay();
+        resetGame();
+      }
+
+      // ---- Confetti ----
+
+      function launchConfetti() {
+        var colors = ['#7c3aed', '#f59e0b', '#10b981', '#ec4899', '#3b82f6'];
+        for (var i = 0; i < 80; i++) {
+          var confetti = document.createElement('div');
+          confetti.className = 'confetti';
+          confetti.style.left = Math.random() * 100 + '%';
+          confetti.style.top = '-10px';
+          confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          confetti.style.animation = 'confettiFall ' + (1 + Math.random()) + 's ease-out forwards';
+          confetti.style.animationDelay = Math.random() * 0.5 + 's';
+          celebrationEl.appendChild(confetti);
+        }
+        setTimeout(function() {
+          celebrationEl.innerHTML = '';
+        }, 2500);
+      }
+
+      // ---- Help Dialog ----
+
+      function showHelp() {
+        helpOverlayEl.classList.add('visible');
+      }
+
+      function hideHelp() {
+        helpOverlayEl.classList.remove('visible');
+        localStorage.setItem('dotsAndBoxes_helpSeen', 'true');
+      }
+
+      // ---- Event Listeners ----
+
+      btnPlayAgain.addEventListener('click', function(e) {
+        e.preventDefault();
+        resetGame();
+      });
+
+      modeComputerBtn.addEventListener('click', function() {
+        switchMode('computer');
+      });
+
+      modeHumanBtn.addEventListener('click', function() {
+        switchMode('human');
+      });
+
+      helpBtnEl.addEventListener('click', showHelp);
+      helpCloseBtnEl.addEventListener('click', hideHelp);
+      helpOverlayEl.addEventListener('click', function(e) {
+        if (e.target === helpOverlayEl) {
+          hideHelp();
+        }
+      });
+
+      // ---- Init ----
+
+      resetGame();
+      updateTrophyDisplay();
+
+      if (!localStorage.getItem('dotsAndBoxes_helpSeen')) {
+        showHelp();
+      }
+    })();
+  </script>
+</body>
+</html>
