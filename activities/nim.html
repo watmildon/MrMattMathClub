@@ -53,30 +53,6 @@
       border-color: #7c3aed;
     }
 
-    /* Trophy display */
-    .trophy-display {
-      background: #f8fafc;
-      border-radius: 12px;
-      padding: 0.75rem 1rem;
-      margin-bottom: 1.25rem;
-      font-size: 0.95rem;
-      color: #64748b;
-    }
-
-    .trophy-level {
-      font-weight: 700;
-      font-size: 1.1rem;
-    }
-
-    .trophy-level.bronze { color: #b45309; }
-    .trophy-level.silver { color: #94a3b8; }
-    .trophy-level.gold   { color: #f59e0b; }
-
-    .streak-info {
-      font-size: 0.85rem;
-      margin-top: 0.25rem;
-    }
-
     /* Turn indicator */
     .turn-indicator {
       font-size: 1.15rem;
@@ -455,10 +431,6 @@
         <button class="mode-btn" id="mode-human">vs Friend</button>
       </div>
 
-      <div class="trophy-display" id="trophy-display">
-        Beat the computer to earn trophies!
-      </div>
-
       <div class="turn-indicator player1" id="turn-indicator">Your Turn</div>
 
       <div class="nim-board" id="nim-board"></div>
@@ -505,7 +477,6 @@
       var btnPlayAgain = document.getElementById('btn-play-again');
       var modeComputerBtn = document.getElementById('mode-computer');
       var modeHumanBtn = document.getElementById('mode-human');
-      var trophyDisplayEl = document.getElementById('trophy-display');
       var gameResultEl = document.getElementById('game-result');
       var resultMessageEl = document.getElementById('result-message');
       var trophyMessageEl = document.getElementById('trophy-message');
@@ -675,7 +646,8 @@
               trophyMessageEl.style.display = '';
               launchConfetti();
             } else {
-              trophyMessageEl.style.display = 'none';
+              trophyMessageEl.textContent = 'Win streak: ' + winStreak;
+              trophyMessageEl.style.display = '';
             }
           } else {
             // Human loses
@@ -694,7 +666,6 @@
         }
 
         gameResultEl.classList.add('visible');
-        updateTrophyDisplay();
         updateTurnIndicator();
       }
 
@@ -827,27 +798,6 @@
         return false;
       }
 
-      function updateTrophyDisplay() {
-        if (gameMode !== 'computer') {
-          trophyDisplayEl.style.display = 'none';
-          return;
-        }
-        trophyDisplayEl.style.display = '';
-
-        if (trophyLevel === 'gold') {
-          trophyDisplayEl.innerHTML = '<span class="trophy-level gold">&#x1F3C6; Gold Trophy</span>' +
-            '<div class="streak-info">Win streak: ' + winStreak + '</div>';
-        } else if (trophyLevel === 'silver') {
-          trophyDisplayEl.innerHTML = '<span class="trophy-level silver">&#x1F3C6; Silver Trophy</span>' +
-            '<div class="streak-info">Win streak: ' + winStreak + ' (5 in a row for Gold)</div>';
-        } else if (trophyLevel === 'bronze') {
-          trophyDisplayEl.innerHTML = '<span class="trophy-level bronze">&#x1F3C6; Bronze Trophy</span>' +
-            '<div class="streak-info">Win streak: ' + winStreak + ' (3 in a row for Silver)</div>';
-        } else {
-          trophyDisplayEl.innerHTML = 'Beat the computer to earn trophies!<div class="streak-info">Win streak: ' + winStreak + '</div>';
-        }
-      }
-
       // ---- UI Updates ----
 
       function updateTurnIndicator() {
@@ -902,7 +852,6 @@
           modeHumanBtn.classList.add('active');
           modeComputerBtn.classList.remove('active');
         }
-        updateTrophyDisplay();
         resetGame();
       }
 
@@ -968,7 +917,6 @@
       // ---- Init ----
 
       resetGame();
-      updateTrophyDisplay();
 
       if (!localStorage.getItem('nim_helpSeen')) {
         showHelp();
