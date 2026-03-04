@@ -78,6 +78,12 @@
         <p>Pack nuggets to fill customer orders. Can you keep your streak alive?</p>
       </a>
 
+      <a href="activities/sudoku.html" class="card sudoku">
+        <span class="icon">&#x1F9E9;</span>
+        <h2>Sudoku</h2>
+        <p>Fill the grid so every row, column, and box has each number exactly once!</p>
+      </a>
+
       <a href="activities/nim.html" class="card nim">
         <span class="icon">&#x1F9E0;</span>
         <h2>NIM</h2>
@@ -148,7 +154,8 @@
     { selector: '.cake-cutting',    key: 'cakeCutting_highScore' },
     { selector: '.number-bonds',    key: 'numberBonds_highScore' },
     { selector: '.sequences',       key: 'sequences_highScore' },
-    { selector: '.food-truck',      key: 'foodTruck_highScore' }
+    { selector: '.food-truck',      key: 'foodTruck_highScore' },
+    { selector: '.sudoku',          key: 'sudoku_highScore' }
   ];
   scoreActivities.forEach(function(act) {
     var score = parseInt(localStorage.getItem(act.key));

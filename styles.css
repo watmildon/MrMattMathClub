@@ -100,6 +100,7 @@ main {
 .card.dots-and-boxes   { border-top: 4px solid #f97316; }
 .card.sequences        { border-top: 4px solid #14b8a6; }
 .card.food-truck       { border-top: 4px solid #d97706; }
+.card.sudoku           { border-top: 4px solid #6366f1; }
 
 /* ---- Activity Page Layout ---- */
 

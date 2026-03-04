@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sudoku - Mr. Matt Math Club</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237c3aed'/><text x='50' y='76' font-size='80' font-weight='bold' text-anchor='middle' fill='white'>M</text></svg>">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    .game-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ---- Score bar ---- */
+    .score-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .score-item {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.15rem;
+    }
+
+    .score-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .score-bar .best-value {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #f59e0b;
+    }
+
+    .score-bar .score-value {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #4c6ef5;
+    }
+
+    /* ---- Difficulty label ---- */
+    .difficulty-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 0.75rem;
+    }
+
+    .difficulty-label .tier-name {
+      color: #7c3aed;
+      font-weight: 700;
+    }
+
+    /* ---- Sudoku grid ---- */
+    .sudoku-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .sudoku-grid {
+      display: grid;
+      gap: 1px;
+      background: #94a3b8;
+      border: 3px solid #1e293b;
+      border-radius: 4px;
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .sudoku-cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      font-weight: 700;
+      font-size: 1.4rem;
+      cursor: pointer;
+      transition: background 0.1s;
+      user-select: none;
+      position: relative;
+    }
+
+    .sudoku-cell.given {
+      color: #1e293b;
+      background: #f1f5f9;
+      cursor: default;
+    }
+
+    .sudoku-cell.user-filled {
+      color: #4c6ef5;
+    }
+
+    .sudoku-cell.selected {
+      background: #ede9fe;
+      box-shadow: inset 0 0 0 2px #7c3aed;
+      z-index: 1;
+    }
+
+    .sudoku-cell.highlighted {
+      background: #dbeafe;
+    }
+
+    .sudoku-cell.same-number {
+      background: #c7d2fe;
+    }
+
+    .sudoku-cell.selected.same-number {
+      background: #ede9fe;
+    }
+
+    .sudoku-cell.conflict {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .sudoku-cell.selected.conflict {
+      background: #fecaca;
+      box-shadow: inset 0 0 0 2px #dc2626;
+    }
+
+    /* Box borders */
+    .sudoku-cell.box-right {
+      border-right: 2px solid #1e293b;
+    }
+
+    .sudoku-cell.box-bottom {
+      border-bottom: 2px solid #1e293b;
+    }
+
+    /* Grid size font adjustments */
+    .grid-size-9 .sudoku-cell {
+      font-size: clamp(1rem, 4vw, 1.3rem);
+    }
+
+    .grid-size-6 .sudoku-cell {
+      font-size: clamp(1.2rem, 5vw, 1.6rem);
+    }
+
+    .grid-size-4 .sudoku-cell {
+      font-size: clamp(1.4rem, 6vw, 1.8rem);
+    }
+
+    /* ---- Numpad ---- */
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      max-width: 240px;
+      margin: 0 auto 1rem;
+    }
+
+    .numpad-btn {
+      width: 100%;
+      aspect-ratio: 1.3;
+      border: none;
+      border-radius: 12px;
+      background: #f1f5f9;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #1e293b;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.1s, box-shadow 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .numpad-btn:hover {
+      background: #e2e8f0;
+      transform: translateY(-2px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .numpad-btn:active {
+      transform: translateY(0);
+    }
+
+    .numpad-btn.erase-btn {
+      background: #fef2f2;
+      color: #dc2626;
+      font-size: 1.5rem;
+    }
+
+    .numpad-btn.erase-btn:hover {
+      background: #fee2e2;
+    }
+
+    /* ---- Action buttons ---- */
+    .action-buttons {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 0.75rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-start { background: linear-gradient(135deg, #7c3aed, #4c6ef5); padding: 1rem 3rem; font-size: 1.2rem; margin-top: 1.5rem; }
+    .btn-again { background: linear-gradient(135deg, #7c3aed, #4c6ef5); margin-top: 1.5rem; }
+    .btn-giveup { background: linear-gradient(135deg, #94a3b8, #cbd5e1); font-size: 0.95rem; padding: 0.6rem 1.5rem; }
+
+    /* ---- Feedback ---- */
+    .feedback-overlay {
+      margin-top: 0.75rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      animation: popIn 0.3s ease;
+    }
+
+    .feedback-correct { color: #059669; }
+    .feedback-wrong { color: #dc2626; }
+
+    @keyframes popIn {
+      0%   { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ---- Start screen ---- */
+    .start-icon {
+      font-size: 3.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .start-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 1rem;
+    }
+
+    .start-desc {
+      font-size: 1.05rem;
+      color: #475569;
+      line-height: 1.6;
+      margin-bottom: 0.5rem;
+    }
+
+    .start-best {
+      color: #f59e0b;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+
+    /* ---- Mode toggle ---- */
+    .mode-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      margin: 1rem 0 0.5rem;
+    }
+
+    .mode-btn {
+      border: 2px solid #e2e8f0;
+      background: white;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #64748b;
+      transition: all 0.2s;
+    }
+
+    .mode-btn:first-child {
+      border-radius: 8px 0 0 8px;
+    }
+
+    .mode-btn:last-child {
+      border-radius: 0 8px 8px 0;
+    }
+
+    .mode-btn + .mode-btn {
+      border-left: 1px solid #e2e8f0;
+    }
+
+    .mode-btn.active {
+      background: #7c3aed;
+      border-color: #7c3aed;
+      color: white;
+    }
+
+    /* ---- Game over ---- */
+    .gameover-icon {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .gameover-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 0.75rem;
+    }
+
+    .gameover-score {
+      font-size: 1.2rem;
+      color: #475569;
+    }
+
+    .gameover-score .big-score {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #4c6ef5;
+      display: block;
+      margin: 0.5rem 0;
+    }
+
+    .gameover-best {
+      font-size: 1rem;
+      color: #f59e0b;
+      font-weight: 600;
+      margin-top: 0.25rem;
+    }
+
+    .gameover-detail {
+      font-size: 0.95rem;
+      color: #64748b;
+      margin-top: 0.5rem;
+    }
+
+    /* ---- Help overlay ---- */
+    .help-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      background: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #7c3aed;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: auto;
+      transition: background 0.15s;
+    }
+
+    .help-btn:hover {
+      background: #f1f5f9;
+    }
+
+    .help-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    .help-overlay.visible {
+      display: flex;
+    }
+
+    .help-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 420px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      text-align: left;
+    }
+
+    .help-card h3 {
+      color: #7c3aed;
+      margin: 0 0 1rem;
+      text-align: center;
+      font-size: 1.3rem;
+    }
+
+    .help-card p {
+      color: #475569;
+      line-height: 1.6;
+      margin: 0.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .help-card strong {
+      color: #1e293b;
+    }
+
+    .help-close {
+      display: block;
+      margin: 1.5rem auto 0;
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 0.6rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* ---- Celebration ---- */
+    .game-wrapper {
+      position: relative;
+    }
+
+    .celebration {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      opacity: 0;
+    }
+
+    @keyframes confettiFall {
+      0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(120px) rotate(360deg); }
+    }
+
+    @media (max-width: 400px) {
+      .game-card {
+        padding: 1.5rem 1rem;
+      }
+      .numpad {
+        max-width: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mr. Matt Math Club</h1>
+  </header>
+
+  <main>
+    <div class="back-row" style="max-width:560px; display:flex; align-items:center;">
+      <a href="../index.html" class="back-btn" aria-label="Back to Activities"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10H5M5 10l5-5M5 10l5 5"/></svg></a>
+      <button class="help-btn" id="help-btn" onclick="showHelp()">?</button>
+    </div>
+
+    <!-- Help overlay -->
+    <div class="help-overlay" id="help-overlay" onclick="hideHelp()">
+      <div class="help-card" onclick="event.stopPropagation()">
+        <h3>How to Play Sudoku</h3>
+        <p><strong>1. Fill the Grid</strong><br>Every row, column, and box must contain each number exactly once.</p>
+        <p><strong>2. Tap &amp; Type</strong><br>Tap a cell to select it, then use the number buttons to fill it in. Tap the eraser to clear a cell.</p>
+        <p><strong>3. Watch for Conflicts</strong><br>Numbers that clash with their row, column, or box turn red.</p>
+        <p><strong>4. Complete the Puzzle</strong><br>Fill every cell with no conflicts and the puzzle solves automatically!</p>
+        <p><strong>5. Keep Your Streak</strong><br>Solve puzzles in a row to build your streak. Puzzles get harder as your streak grows. Giving up resets your streak!</p>
+        <button class="help-close" onclick="hideHelp()">Got It!</button>
+      </div>
+    </div>
+
+    <div class="game-wrapper">
+      <div class="game-card">
+
+        <!-- Start screen -->
+        <div id="start-screen">
+          <div class="start-icon">&#x1F9E9;</div>
+          <div class="start-title">Sudoku!</div>
+          <p class="start-desc">
+            Fill the grid so every row, column, and box has each number exactly once.
+          </p>
+          <p class="start-desc">
+            Build a streak to unlock harder puzzles!
+          </p>
+          <div class="mode-toggle">
+            <button class="mode-btn active" id="mode-4" onclick="setGridSize(4)">4&times;4</button>
+            <button class="mode-btn" id="mode-6" onclick="setGridSize(6)">6&times;6</button>
+            <button class="mode-btn" id="mode-9" onclick="setGridSize(9)">9&times;9</button>
+          </div>
+          <p class="start-best" id="start-best" style="display:none">
+            Your best streak: <span id="start-best-score">0</span>
+          </p>
+          <button class="btn btn-start" onclick="startGame()">Let's Play!</button>
+        </div>
+
+        <!-- Game screen -->
+        <div id="game-screen" style="display:none">
+          <h2 class="activity-title">Sudoku</h2>
+          <div class="score-bar">
+            <div class="score-item"><span class="score-label">Best Streak</span><span class="best-value" id="best-score">0</span></div>
+            <div class="score-item"><span class="score-label">Streak</span><span class="score-value" id="streak-display">0</span></div>
+          </div>
+          <div class="difficulty-label" id="difficulty-label">Difficulty: <span class="tier-name" id="tier-name">Easy</span></div>
+          <div class="sudoku-container">
+            <div class="sudoku-grid" id="sudoku-grid"></div>
+          </div>
+          <div class="numpad" id="numpad"></div>
+          <div class="action-buttons">
+            <button class="btn btn-giveup" onclick="giveUp()">Give Up</button>
+          </div>
+          <div id="feedback" style="display:none">
+            <div class="feedback-overlay" id="feedback-msg"></div>
+          </div>
+        </div>
+
+        <!-- Game over screen -->
+        <div id="gameover-screen" style="display:none">
+          <h2 class="activity-title">Sudoku</h2>
+          <div class="gameover-icon">&#x1F9E9;</div>
+          <div class="gameover-title">Game Over!</div>
+          <div class="gameover-score">
+            Streak
+            <span class="big-score" id="final-streak">0</span>
+          </div>
+          <div class="gameover-detail" id="final-detail"></div>
+          <div class="gameover-best" id="gameover-best"></div>
+          <button class="btn btn-again" onclick="resetGame()">Play Again</button>
+        </div>
+
+      </div>
+      <div class="celebration" id="celebration"></div>
+    </div>
+  </main>
+
+  <script>
+    /* ============================================================
+       SUDOKU – Mr. Matt Math Club
+       ============================================================ */
+
+    // ---- Configuration ----
+    var GRID_CONFIGS = {
+      4: { size: 4, boxRows: 2, boxCols: 2 },
+      6: { size: 6, boxRows: 2, boxCols: 3 },
+      9: { size: 9, boxRows: 3, boxCols: 3 }
+    };
+
+    // Clue counts per tier [easy, medium, hard, expert]
+    var CLUE_TABLE = {
+      4: [11, 9, 7, 5],
+      6: [24, 20, 16, 13],
+      9: [42, 36, 30, 25]
+    };
+
+    var TIER_NAMES = ["Easy", "Medium", "Hard", "Expert"];
+
+    // ---- State ----
+    var gridSize = 4;
+    var boxRows = 2;
+    var boxCols = 2;
+    var solution = [];
+    var puzzle = [];
+    var playerGrid = [];
+    var givenCells = {};   // "r,c" -> true
+    var selectedRow = -1;
+    var selectedCol = -1;
+    var streak = 0;
+    var round = 0;
+    var gameOver = false;
+    var puzzleComplete = false;
+
+    // ---- DOM refs ----
+    var gridEl = document.getElementById("sudoku-grid");
+    var numpadEl = document.getElementById("numpad");
+    var celebrationEl = document.getElementById("celebration");
+
+    // ---- Utility ----
+    function shuffleArray(arr) {
+      var copy = arr.slice();
+      for (var i = copy.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = copy[i];
+        copy[i] = copy[j];
+        copy[j] = tmp;
+      }
+      return copy;
+    }
+
+    function copyGrid(grid) {
+      var copy = [];
+      for (var i = 0; i < grid.length; i++) {
+        copy.push(grid[i].slice());
+      }
+      return copy;
+    }
+
+    function range(n) {
+      var arr = [];
+      for (var i = 1; i <= n; i++) arr.push(i);
+      return arr;
+    }
+
+    // ---- Puzzle generation ----
+    function isValidPlacement(grid, row, col, num, size, br, bc) {
+      for (var c = 0; c < size; c++) {
+        if (grid[row][c] === num) return false;
+      }
+      for (var r = 0; r < size; r++) {
+        if (grid[r][col] === num) return false;
+      }
+      var startR = Math.floor(row / br) * br;
+      var startC = Math.floor(col / bc) * bc;
+      for (var r = startR; r < startR + br; r++) {
+        for (var c = startC; c < startC + bc; c++) {
+          if (grid[r][c] === num) return false;
+        }
+      }
+      return true;
+    }
+
+    function fillBoard(grid, pos, size, br, bc) {
+      if (pos >= size * size) return true;
+      var row = Math.floor(pos / size);
+      var col = pos % size;
+      var candidates = shuffleArray(range(size));
+      for (var i = 0; i < candidates.length; i++) {
+        var num = candidates[i];
+        if (isValidPlacement(grid, row, col, num, size, br, bc)) {
+          grid[row][col] = num;
+          if (fillBoard(grid, pos + 1, size, br, bc)) return true;
+          grid[row][col] = 0;
+        }
+      }
+      return false;
+    }
+
+    function generateFullBoard(size, br, bc) {
+      var grid = [];
+      for (var r = 0; r < size; r++) {
+        var row = [];
+        for (var c = 0; c < size; c++) row.push(0);
+        grid.push(row);
+      }
+      fillBoard(grid, 0, size, br, bc);
+      return grid;
+    }
+
+    function getTier(currentStreak) {
+      if (currentStreak < 3) return 0;
+      if (currentStreak < 6) return 1;
+      if (currentStreak < 10) return 2;
+      return 3;
+    }
+
+    function getClueCount(size, currentStreak) {
+      var tier = getTier(currentStreak);
+      var base = CLUE_TABLE[size][tier];
+      // Small random variation
+      var variation = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
+      var count = base + variation;
+      // Clamp: at least size+1 clues, at most size*size - size
+      var min = size + 1;
+      var max = size * size - size;
+      if (count < min) count = min;
+      if (count > max) count = max;
+      return count;
+    }
+
+    function createPuzzle(sol, clueCount) {
+      var size = sol.length;
+      var puz = copyGrid(sol);
+      var totalCells = size * size;
+      var toRemove = totalCells - clueCount;
+
+      // Build list of all positions, shuffle
+      var positions = [];
+      for (var r = 0; r < size; r++) {
+        for (var c = 0; c < size; c++) {
+          positions.push([r, c]);
+        }
+      }
+      positions = shuffleArray(positions);
+
+      var removed = 0;
+      for (var i = 0; i < positions.length && removed < toRemove; i++) {
+        var r = positions[i][0];
+        var c = positions[i][1];
+        if (puz[r][c] !== 0) {
+          puz[r][c] = 0;
+          removed++;
+        }
+      }
+      return puz;
+    }
+
+    // ---- Conflict detection ----
+    function findConflicts() {
+      var conflicts = {};
+      var size = gridSize;
+      for (var r = 0; r < size; r++) {
+        for (var c = 0; c < size; c++) {
+          var val = playerGrid[r][c];
+          if (val === 0) continue;
+          // Check row
+          for (var c2 = 0; c2 < size; c2++) {
+            if (c2 !== c && playerGrid[r][c2] === val) {
+              conflicts[r + "," + c] = true;
+              conflicts[r + "," + c2] = true;
+            }
+          }
+          // Check column
+          for (var r2 = 0; r2 < size; r2++) {
+            if (r2 !== r && playerGrid[r2][c] === val) {
+              conflicts[r + "," + c] = true;
+              conflicts[r2 + "," + c] = true;
+            }
+          }
+          // Check box
+          var br = Math.floor(r / boxRows) * boxRows;
+          var bc = Math.floor(c / boxCols) * boxCols;
+          for (var r2 = br; r2 < br + boxRows; r2++) {
+            for (var c2 = bc; c2 < bc + boxCols; c2++) {
+              if ((r2 !== r || c2 !== c) && playerGrid[r2][c2] === val) {
+                conflicts[r + "," + c] = true;
+                conflicts[r2 + "," + c2] = true;
+              }
+            }
+          }
+        }
+      }
+      return conflicts;
+    }
+
+    // ---- Rendering ----
+    function renderGrid() {
+      gridEl.innerHTML = "";
+      gridEl.style.gridTemplateColumns = "repeat(" + gridSize + ", 1fr)";
+      gridEl.className = "sudoku-grid grid-size-" + gridSize;
+
+      for (var r = 0; r < gridSize; r++) {
+        for (var c = 0; c < gridSize; c++) {
+          var cell = document.createElement("div");
+          cell.className = "sudoku-cell";
+          cell.setAttribute("data-row", r);
+          cell.setAttribute("data-col", c);
+
+          // Box borders
+          if ((c + 1) % boxCols === 0 && c < gridSize - 1) {
+            cell.classList.add("box-right");
+          }
+          if ((r + 1) % boxRows === 0 && r < gridSize - 1) {
+            cell.classList.add("box-bottom");
+          }
+
+          if (puzzle[r][c] !== 0) {
+            cell.textContent = puzzle[r][c];
+            cell.classList.add("given");
+            givenCells[r + "," + c] = true;
+          }
+
+          (function(row, col) {
+            cell.addEventListener("click", function() {
+              selectCell(row, col);
+            });
+          })(r, c);
+
+          gridEl.appendChild(cell);
+        }
+      }
+    }
+
+    function renderNumpad() {
+      numpadEl.innerHTML = "";
+      for (var i = 1; i <= gridSize; i++) {
+        var btn = document.createElement("button");
+        btn.className = "numpad-btn";
+        btn.textContent = i;
+        (function(num) {
+          btn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            placeNumber(num);
+          });
+        })(i);
+        numpadEl.appendChild(btn);
+      }
+      // Erase button
+      var eraseBtn = document.createElement("button");
+      eraseBtn.className = "numpad-btn erase-btn";
+      eraseBtn.innerHTML = "&#x232B;";
+      eraseBtn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        eraseCell();
+      });
+      numpadEl.appendChild(eraseBtn);
+    }
+
+    function updateCellDisplay() {
+      var conflicts = findConflicts();
+      var cells = gridEl.querySelectorAll(".sudoku-cell");
+      var selectedVal = (selectedRow >= 0 && selectedCol >= 0) ? playerGrid[selectedRow][selectedCol] : 0;
+
+      cells.forEach(function(cell) {
+        var r = parseInt(cell.getAttribute("data-row"));
+        var c = parseInt(cell.getAttribute("data-col"));
+        var isGiven = givenCells[r + "," + c];
+
+        // Update cell content
+        if (!isGiven) {
+          cell.textContent = playerGrid[r][c] === 0 ? "" : playerGrid[r][c];
+          cell.classList.toggle("user-filled", playerGrid[r][c] !== 0);
+        }
+
+        // Remove dynamic classes
+        cell.classList.remove("selected", "highlighted", "same-number", "conflict");
+
+        // Selected
+        if (r === selectedRow && c === selectedCol) {
+          cell.classList.add("selected");
+        }
+
+        // Highlighted (same row/col/box)
+        if (selectedRow >= 0 && selectedCol >= 0) {
+          if (r === selectedRow || c === selectedCol) {
+            cell.classList.add("highlighted");
+          }
+          var selBoxR = Math.floor(selectedRow / boxRows) * boxRows;
+          var selBoxC = Math.floor(selectedCol / boxCols) * boxCols;
+          if (r >= selBoxR && r < selBoxR + boxRows && c >= selBoxC && c < selBoxC + boxCols) {
+            cell.classList.add("highlighted");
+          }
+        }
+
+        // Same number
+        if (selectedVal > 0 && playerGrid[r][c] === selectedVal && !(r === selectedRow && c === selectedCol)) {
+          cell.classList.add("same-number");
+        }
+
+        // Conflict
+        if (conflicts[r + "," + c]) {
+          cell.classList.add("conflict");
+        }
+      });
+    }
+
+    function updateScoreBar() {
+      var sizeKey = "sudoku_" + gridSize;
+      var best = parseInt(localStorage.getItem(sizeKey + "_bestStreak")) || 0;
+      document.getElementById("best-score").textContent = best;
+      document.getElementById("streak-display").textContent = streak;
+
+      var tier = getTier(streak);
+      document.getElementById("tier-name").textContent = TIER_NAMES[tier];
+    }
+
+    // ---- Interaction ----
+    function selectCell(row, col) {
+      if (gameOver || puzzleComplete) return;
+      selectedRow = row;
+      selectedCol = col;
+      updateCellDisplay();
+    }
+
+    function placeNumber(num) {
+      if (gameOver || puzzleComplete) return;
+      if (selectedRow < 0 || selectedCol < 0) return;
+      if (givenCells[selectedRow + "," + selectedCol]) return;
+
+      playerGrid[selectedRow][selectedCol] = num;
+      updateCellDisplay();
+      checkAutoComplete();
+    }
+
+    function eraseCell() {
+      if (gameOver || puzzleComplete) return;
+      if (selectedRow < 0 || selectedCol < 0) return;
+      if (givenCells[selectedRow + "," + selectedCol]) return;
+
+      playerGrid[selectedRow][selectedCol] = 0;
+      updateCellDisplay();
+    }
+
+    function moveSelection(dRow, dCol) {
+      if (gameOver || puzzleComplete) return;
+      var newRow = selectedRow + dRow;
+      var newCol = selectedCol + dCol;
+      if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
+        selectCell(newRow, newCol);
+      }
+    }
+
+    // ---- Completion checks ----
+    function isBoardFull() {
+      for (var r = 0; r < gridSize; r++) {
+        for (var c = 0; c < gridSize; c++) {
+          if (playerGrid[r][c] === 0) return false;
+        }
+      }
+      return true;
+    }
+
+    function isBoardCorrect() {
+      for (var r = 0; r < gridSize; r++) {
+        for (var c = 0; c < gridSize; c++) {
+          if (playerGrid[r][c] !== solution[r][c]) return false;
+        }
+      }
+      return true;
+    }
+
+    function checkAutoComplete() {
+      if (!isBoardFull()) return;
+      var conflicts = findConflicts();
+      var hasConflicts = false;
+      for (var key in conflicts) {
+        hasConflicts = true;
+        break;
+      }
+      if (!hasConflicts) {
+        puzzleSolved();
+      }
+    }
+
+    function puzzleSolved() {
+      puzzleComplete = true;
+      streak++;
+      updateScoreBar();
+      saveScores();
+      showFeedback("correct", "Solved! Streak: " + streak);
+      showConfetti();
+
+      setTimeout(function() {
+        hideFeedback();
+        puzzleComplete = false;
+        nextPuzzle();
+      }, 1800);
+    }
+
+    function giveUp() {
+      if (gameOver || puzzleComplete) return;
+      // Reveal solution
+      for (var r = 0; r < gridSize; r++) {
+        for (var c = 0; c < gridSize; c++) {
+          playerGrid[r][c] = solution[r][c];
+        }
+      }
+      selectedRow = -1;
+      selectedCol = -1;
+      updateCellDisplay();
+
+      // Streak broken
+      streak = 0;
+      updateScoreBar();
+      showFeedback("wrong", "Streak reset. Keep trying!");
+
+      setTimeout(function() {
+        hideFeedback();
+        nextPuzzle();
+      }, 2000);
+    }
+
+    // ---- Feedback ----
+    function showFeedback(type, msg) {
+      var el = document.getElementById("feedback");
+      var msgEl = document.getElementById("feedback-msg");
+      el.style.display = "block";
+      msgEl.className = "feedback-overlay feedback-" + type;
+      msgEl.textContent = msg;
+      // Re-trigger animation
+      msgEl.style.animation = "none";
+      msgEl.offsetHeight;
+      msgEl.style.animation = "";
+    }
+
+    function hideFeedback() {
+      document.getElementById("feedback").style.display = "none";
+    }
+
+    // ---- Game flow ----
+    function setGridSize(size) {
+      gridSize = size;
+      var config = GRID_CONFIGS[size];
+      boxRows = config.boxRows;
+      boxCols = config.boxCols;
+
+      // Update toggle buttons
+      document.getElementById("mode-4").classList.toggle("active", size === 4);
+      document.getElementById("mode-6").classList.toggle("active", size === 6);
+      document.getElementById("mode-9").classList.toggle("active", size === 9);
+
+      // Update best streak display
+      var sizeKey = "sudoku_" + size;
+      var best = parseInt(localStorage.getItem(sizeKey + "_bestStreak")) || 0;
+      var bestEl = document.getElementById("start-best");
+      var bestScoreEl = document.getElementById("start-best-score");
+      if (best > 0) {
+        bestEl.style.display = "block";
+        bestScoreEl.textContent = best;
+      } else {
+        bestEl.style.display = "none";
+      }
+    }
+
+    function startGame() {
+      streak = 0;
+      round = 0;
+      gameOver = false;
+      puzzleComplete = false;
+
+      document.getElementById("start-screen").style.display = "none";
+      document.getElementById("game-screen").style.display = "block";
+      document.getElementById("gameover-screen").style.display = "none";
+
+      renderNumpad();
+      updateScoreBar();
+      nextPuzzle();
+    }
+
+    function nextPuzzle() {
+      round++;
+      selectedRow = -1;
+      selectedCol = -1;
+      givenCells = {};
+      puzzleComplete = false;
+
+      var config = GRID_CONFIGS[gridSize];
+      solution = generateFullBoard(config.size, config.boxRows, config.boxCols);
+      var clueCount = getClueCount(gridSize, streak);
+      puzzle = createPuzzle(solution, clueCount);
+      playerGrid = copyGrid(puzzle);
+
+      renderGrid();
+      updateScoreBar();
+    }
+
+    function endGame() {
+      saveScores();
+      document.getElementById("game-screen").style.display = "none";
+      document.getElementById("gameover-screen").style.display = "block";
+
+      document.getElementById("final-streak").textContent = streak;
+      document.getElementById("final-detail").textContent = "Completed " + (round - 1) + " puzzle" + ((round - 1) !== 1 ? "s" : "") + " on " + gridSize + "\u00D7" + gridSize;
+
+      var sizeKey = "sudoku_" + gridSize;
+      var best = parseInt(localStorage.getItem(sizeKey + "_bestStreak")) || 0;
+      var bestEl = document.getElementById("gameover-best");
+      if (streak >= best && streak > 0) {
+        bestEl.textContent = "New best streak!";
+        bestEl.style.color = "#10b981";
+      } else {
+        bestEl.textContent = "Best streak: " + best;
+        bestEl.style.color = "#f59e0b";
+      }
+    }
+
+    function resetGame() {
+      document.getElementById("start-screen").style.display = "block";
+      document.getElementById("game-screen").style.display = "none";
+      document.getElementById("gameover-screen").style.display = "none";
+      hideFeedback();
+      setGridSize(gridSize);
+    }
+
+    // ---- Persistence ----
+    function saveScores() {
+      var sizeKey = "sudoku_" + gridSize;
+      var currentBestStreak = parseInt(localStorage.getItem(sizeKey + "_bestStreak")) || 0;
+      if (streak > currentBestStreak) {
+        localStorage.setItem(sizeKey + "_bestStreak", streak);
+      }
+      // Combined key for index.html badge
+      var maxStreak = Math.max(
+        parseInt(localStorage.getItem("sudoku_4_bestStreak")) || 0,
+        parseInt(localStorage.getItem("sudoku_6_bestStreak")) || 0,
+        parseInt(localStorage.getItem("sudoku_9_bestStreak")) || 0
+      );
+      localStorage.setItem("sudoku_highScore", maxStreak);
+    }
+
+    // ---- Confetti ----
+    function showConfetti() {
+      celebrationEl.innerHTML = "";
+      var colors = ["#7c3aed", "#4c6ef5", "#10b981", "#f59e0b", "#ec4899", "#34d399"];
+      for (var i = 0; i < 25; i++) {
+        var dot = document.createElement("div");
+        dot.className = "confetti";
+        dot.style.left = Math.random() * 100 + "%";
+        dot.style.top = Math.random() * 40 + "%";
+        dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+        dot.style.animation = "confettiFall 0.8s " + (Math.random() * 0.3).toFixed(2) + "s ease-out forwards";
+        celebrationEl.appendChild(dot);
+      }
+    }
+
+    // ---- Help ----
+    function showHelp() {
+      document.getElementById("help-overlay").classList.add("visible");
+    }
+
+    function hideHelp() {
+      document.getElementById("help-overlay").classList.remove("visible");
+    }
+
+    // ---- Keyboard ----
+    document.addEventListener("keydown", function(e) {
+      if (document.getElementById("help-overlay").classList.contains("visible")) {
+        if (e.key === "Escape") hideHelp();
+        return;
+      }
+
+      if (document.getElementById("game-screen").style.display === "none") return;
+
+      var num = parseInt(e.key);
+      if (num >= 1 && num <= gridSize) {
+        e.preventDefault();
+        placeNumber(num);
+      } else if (e.key === "Backspace" || e.key === "Delete") {
+        e.preventDefault();
+        eraseCell();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (selectedRow < 0) { selectCell(0, 0); }
+        else { moveSelection(-1, 0); }
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (selectedRow < 0) { selectCell(0, 0); }
+        else { moveSelection(1, 0); }
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        if (selectedCol < 0) { selectCell(0, 0); }
+        else { moveSelection(0, -1); }
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        if (selectedCol < 0) { selectCell(0, 0); }
+        else { moveSelection(0, 1); }
+      }
+    });
+
+    // Click outside grid deselects
+    document.addEventListener("click", function(e) {
+      if (!e.target.closest(".sudoku-grid") && !e.target.closest(".numpad") && !e.target.closest(".action-buttons")) {
+        selectedRow = -1;
+        selectedCol = -1;
+        updateCellDisplay();
+      }
+    });
+
+    // ---- Init ----
+    setGridSize(4);
+  </script>
+</body>
+</html>
