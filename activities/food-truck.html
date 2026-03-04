@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Food Truck - Mr. Matt Math Club</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237c3aed'/><text x='50' y='76' font-size='80' font-weight='bold' text-anchor='middle' fill='white'>M</text></svg>">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    .game-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      max-width: 580px;
+      margin: 0 auto;
+    }
+
+    /* ---- Score bar ---- */
+    .score-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .score-item {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.15rem;
+    }
+
+    .score-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .score-bar .best-value {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #f59e0b;
+    }
+
+    .score-bar .score-value {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #4c6ef5;
+    }
+
+    /* ---- Order display ---- */
+    .order-display {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border: 3px solid #f59e0b;
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.25rem;
+      animation: orderAppear 0.3s ease;
+    }
+
+    .order-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #92400e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .order-number {
+      font-size: 3rem;
+      font-weight: 800;
+      color: #78350f;
+    }
+
+    .order-sublabel {
+      font-size: 0.95rem;
+      color: #92400e;
+      font-weight: 600;
+    }
+
+    @keyframes orderAppear {
+      0%   { transform: scale(0.85); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ---- Tray ---- */
+    .tray-area {
+      display: flex;
+      justify-content: center;
+      margin: 1.25rem 0;
+    }
+
+    .tray {
+      background: #f1f5f9;
+      border: 3px solid #94a3b8;
+      border-radius: 12px;
+      padding: 12px;
+      min-width: 280px;
+      min-height: 100px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      transition: border-color 0.2s;
+    }
+
+    .tray.tray-correct {
+      border-color: #10b981;
+      background: #ecfdf5;
+    }
+
+    .tray.tray-wrong {
+      border-color: #dc2626;
+      background: #fef2f2;
+    }
+
+    .tray-empty {
+      color: #94a3b8;
+      font-size: 1rem;
+      font-style: italic;
+    }
+
+    /* ---- Nugget packets ---- */
+    .packet {
+      border-radius: 10px;
+      border: 2px solid;
+      padding: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      animation: packetDrop 0.25s ease;
+      position: relative;
+    }
+
+    .packet:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .nugget {
+      width: 16px;
+      height: 14px;
+      background: #d97706;
+      border: 1.5px solid #92400e;
+      border-radius: 40% 50% 45% 55% / 55% 45% 50% 40%;
+    }
+
+    .packet-label {
+      position: absolute;
+      bottom: -8px;
+      right: -6px;
+      background: white;
+      border-radius: 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 1px 5px;
+      border: 1.5px solid #94a3b8;
+      color: #475569;
+    }
+
+    @keyframes packetDrop {
+      0%   { transform: scale(0.7) translateY(-10px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    /* ---- Pack buttons ---- */
+    .pack-buttons {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 1rem 0;
+    }
+
+    .btn-pack {
+      border: none;
+      border-radius: 12px;
+      padding: 0.75rem 1.5rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      color: white;
+    }
+
+    .btn-pack:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-pack:active {
+      transform: translateY(0);
+    }
+
+    /* ---- Action buttons ---- */
+    .action-buttons {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-top: 0.75rem;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 0.75rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-serve  { background: linear-gradient(135deg, #10b981, #34d399); padding: 0.85rem 2.5rem; font-size: 1.15rem; }
+    .btn-refuse { background: linear-gradient(135deg, #dc2626, #ef4444); }
+    .btn-clear  { background: linear-gradient(135deg, #94a3b8, #cbd5e1); }
+    .btn-start  { background: linear-gradient(135deg, #7c3aed, #4c6ef5); padding: 1rem 3rem; font-size: 1.2rem; margin-top: 1.5rem; }
+    .btn-again  { background: linear-gradient(135deg, #7c3aed, #4c6ef5); margin-top: 1.5rem; }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ---- Feedback ---- */
+    .feedback-overlay {
+      margin-top: 1rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      animation: popIn 0.3s ease;
+    }
+
+    .feedback-correct { color: #059669; }
+    .feedback-wrong   { color: #dc2626; }
+
+    .feedback-detail {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #92400e;
+      background: #fef3c7;
+      border-radius: 10px;
+      padding: 0.6rem 1.25rem;
+      margin-top: 0.5rem;
+      display: inline-block;
+    }
+
+    @keyframes popIn {
+      0%   { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ---- Start screen ---- */
+    .start-icon {
+      font-size: 3.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .start-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 1rem;
+    }
+
+    .start-desc {
+      font-size: 1.05rem;
+      color: #475569;
+      line-height: 1.6;
+      margin-bottom: 0.5rem;
+    }
+
+    .start-highlight {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #7c3aed;
+      background: #ede9fe;
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      margin: 1rem 0;
+      display: inline-block;
+    }
+
+    .start-best {
+      color: #f59e0b;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+
+    .pack-demo {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      align-items: center;
+      margin: 0.75rem 0;
+      flex-wrap: wrap;
+    }
+
+    .pack-chip {
+      border-radius: 8px;
+      padding: 0.4rem 0.8rem;
+      font-weight: 700;
+      font-size: 1rem;
+      border: 2px solid;
+    }
+
+    /* ---- Mode toggle ---- */
+    .mode-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      margin: 1rem 0 0.5rem;
+    }
+
+    .mode-btn {
+      border: 2px solid #e2e8f0;
+      background: white;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #64748b;
+      transition: all 0.2s;
+    }
+
+    .mode-btn:first-child {
+      border-radius: 8px 0 0 8px;
+    }
+
+    .mode-btn:last-child {
+      border-radius: 0 8px 8px 0;
+    }
+
+    .mode-btn + .mode-btn {
+      border-left: 1px solid #e2e8f0;
+    }
+
+    .mode-btn.active {
+      background: #7c3aed;
+      border-color: #7c3aed;
+      color: white;
+    }
+
+    /* ---- Game over ---- */
+    .gameover-icon {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .gameover-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 0.75rem;
+    }
+
+    .gameover-score {
+      font-size: 1.2rem;
+      color: #475569;
+    }
+
+    .gameover-score .big-score {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #4c6ef5;
+      display: block;
+      margin: 0.5rem 0;
+    }
+
+    .gameover-best {
+      font-size: 1rem;
+      color: #f59e0b;
+      font-weight: 600;
+      margin-top: 0.25rem;
+    }
+
+    .gameover-detail {
+      font-size: 0.95rem;
+      color: #64748b;
+      margin-top: 0.5rem;
+    }
+
+    /* ---- Celebration ---- */
+    .game-wrapper {
+      position: relative;
+    }
+
+    .celebration {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      opacity: 0;
+    }
+
+    @keyframes confettiFall {
+      0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(120px) rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mr. Matt Math Club</h1>
+  </header>
+
+  <main>
+    <div class="back-row" style="max-width:580px">
+      <a href="../index.html" class="back-btn" aria-label="Back to Activities"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10H5M5 10l5-5M5 10l5 5"/></svg></a>
+    </div>
+
+    <div class="game-wrapper">
+      <div class="game-card">
+
+        <!-- Start screen -->
+        <div id="start-screen">
+          <div class="start-icon">&#x1F69A;</div>
+          <div class="start-title">Food Truck!</div>
+          <p class="start-desc">
+            You run a food truck that sells chicken nuggets!
+          </p>
+          <p class="start-desc">
+            Customers order a specific number of nuggets. Fill the tray with packs to match their order exactly.
+          </p>
+          <div class="pack-demo" id="pack-demo"></div>
+          <p class="start-desc">
+            Build a streak to score big!
+          </p>
+          <div class="mode-toggle">
+            <button class="mode-btn active" id="mode-classic" onclick="setMode('classic')">Classic</button>
+            <button class="mode-btn" id="mode-hard" onclick="setMode('hard')">Hard</button>
+            <button class="mode-btn" id="mode-impossible" onclick="setMode('impossible')">Impossible</button>
+          </div>
+          <p class="start-desc mode-desc" id="mode-desc" style="display:none; font-size:0.9rem; color:#94a3b8; font-style:italic;"></p>
+          <p class="start-best" id="start-best" style="display:none">
+            Your best streak: <span id="start-best-score">0</span>
+          </p>
+          <br>
+          <button class="btn btn-start" onclick="startGame()">Open for Business!</button>
+        </div>
+
+        <!-- Game screen -->
+        <div id="game-screen" style="display:none">
+          <h2 class="activity-title">Food Truck</h2>
+          <div class="score-bar">
+            <div class="score-item"><span class="score-label">Best Streak</span><span class="best-value" id="best-score">0</span></div>
+            <div class="score-item"><span class="score-label">Streak</span><span class="score-value" id="streak">0</span></div>
+            <div class="score-item"><span class="score-label">Served</span><span class="score-value" id="served">0</span></div>
+          </div>
+
+          <div class="order-display" id="order-display">
+            <div class="order-label">Order Up!</div>
+            <div class="order-number" id="order-number">21</div>
+            <div class="order-sublabel">nuggets</div>
+          </div>
+
+          <div class="tray-area">
+            <div class="tray" id="tray">
+              <span class="tray-empty" id="tray-empty">Tap a pack size to add it</span>
+            </div>
+          </div>
+
+          <div id="game-controls">
+            <div class="pack-buttons" id="pack-buttons"></div>
+
+            <div class="action-buttons">
+              <button class="btn btn-clear" onclick="clearTray()">Clear</button>
+              <button class="btn btn-refuse" id="btn-refuse" onclick="refuse()" style="display:none">Can't fill!</button>
+              <button class="btn btn-serve" id="btn-serve" onclick="serve()">Serve!</button>
+            </div>
+          </div>
+
+          <div id="feedback" style="display:none">
+            <div class="feedback-overlay" id="feedback-msg"></div>
+            <div class="feedback-detail" id="feedback-detail" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- Game over screen -->
+        <div id="gameover-screen" style="display:none">
+          <h2 class="activity-title">Food Truck</h2>
+          <div class="gameover-icon">&#x1F69A;</div>
+          <div class="gameover-title">Shift Over!</div>
+          <div class="gameover-score">
+            Best streak
+            <span class="big-score" id="final-streak">0</span>
+          </div>
+          <div class="gameover-detail" id="final-served"></div>
+          <div class="gameover-best" id="gameover-best"></div>
+          <button class="btn btn-again" onclick="resetGame()">New Shift</button>
+        </div>
+
+      </div>
+      <div class="celebration" id="celebration"></div>
+    </div>
+  </main>
+
+<script>
+  var CLASSIC_PACKS = [6, 9, 20];
+
+  // Color themes for the 3 pack slots
+  var PACK_THEMES = [
+    { bg: "#fef3c7", border: "#f59e0b", textColor: "#92400e", btnFrom: "#f59e0b", btnTo: "#fbbf24" },
+    { bg: "#dbeafe", border: "#3b82f6", textColor: "#1e40af", btnFrom: "#3b82f6", btnTo: "#60a5fa" },
+    { bg: "#fce7f3", border: "#ec4899", textColor: "#9d174d", btnFrom: "#ec4899", btnTo: "#f472b6" }
+  ];
+
+  // Hard mode candidate pool (includes primes for higher Frobenius numbers)
+  var HARD_POOL = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 17, 19, 20, 21, 23, 25];
+
+  var gameMode = "classic"; // "classic", "hard", or "impossible"
+  var activePacks = CLASSIC_PACKS.slice();
+  var highScoreClassic = parseInt(localStorage.getItem("foodTruck_highScore")) || 0;
+  var highScoreHard = parseInt(localStorage.getItem("foodTruck_hardMode_highScore")) || 0;
+  var highScoreImpossible = parseInt(localStorage.getItem("foodTruck_impossible_highScore")) || 0;
+  var highScore = highScoreClassic;
+  var orderImpossible = false; // whether current order cannot be filled
+  var currentStreak = 0;
+  var bestStreakThisGame = 0;
+  var totalServed = 0;
+  var orderAmount = 0;
+  var trayPacks = [];
+  var wrongAttempts = 0;
+  var possibleSet = {};
+
+  // DOM refs
+  var startScreen    = document.getElementById("start-screen");
+  var gameScreen     = document.getElementById("game-screen");
+  var gameoverScreen = document.getElementById("gameover-screen");
+  var bestScoreEl    = document.getElementById("best-score");
+  var streakEl       = document.getElementById("streak");
+  var servedEl       = document.getElementById("served");
+  var orderNumberEl  = document.getElementById("order-number");
+  var orderDisplay   = document.getElementById("order-display");
+  var trayEl         = document.getElementById("tray");
+  var trayEmptyEl    = document.getElementById("tray-empty");
+  var gameControls   = document.getElementById("game-controls");
+  var packButtonsEl  = document.getElementById("pack-buttons");
+  var feedbackEl     = document.getElementById("feedback");
+  var feedbackMsg    = document.getElementById("feedback-msg");
+  var feedbackDetail = document.getElementById("feedback-detail");
+  var finalStreakEl   = document.getElementById("final-streak");
+  var finalServedEl  = document.getElementById("final-served");
+  var gameoverBest   = document.getElementById("gameover-best");
+  var celebration    = document.getElementById("celebration");
+  var packDemoEl     = document.getElementById("pack-demo");
+  var startBestEl    = document.getElementById("start-best");
+  var startBestScore = document.getElementById("start-best-score");
+  var modeDescEl     = document.getElementById("mode-desc");
+  var btnRefuse      = document.getElementById("btn-refuse");
+
+  // Build the set of reachable values for given pack sizes
+  function buildPossibleSet(sizes) {
+    possibleSet = {};
+    var s0 = sizes[0], s1 = sizes[1], s2 = sizes[2];
+    var max0 = Math.floor(200 / s0);
+    var max1 = Math.floor(200 / s1);
+    var max2 = Math.floor(200 / s2);
+    for (var a = 0; a <= max0; a++) {
+      for (var b = 0; b <= max1; b++) {
+        for (var c = 0; c <= max2; c++) {
+          var val = a * s0 + b * s1 + c * s2;
+          if (val > 0 && val <= 200) {
+            possibleSet[val] = true;
+          }
+        }
+      }
+    }
+  }
+
+  function isPossible(n) {
+    return !!possibleSet[n];
+  }
+
+  function gcd(a, b) {
+    while (b) { var t = b; b = a % b; a = t; }
+    return a;
+  }
+
+  // Check that all 3 sizes are pairwise coprime
+  function arePairwiseCoprime(sizes) {
+    return gcd(sizes[0], sizes[1]) === 1
+        && gcd(sizes[0], sizes[2]) === 1
+        && gcd(sizes[1], sizes[2]) === 1;
+  }
+
+  // Compute the Frobenius number (largest unreachable value) for 3 sizes
+  function frobeniusNumber(sizes) {
+    var reachable = {};
+    var s0 = sizes[0], s1 = sizes[1], s2 = sizes[2];
+    var limit = s0 * s1 * s2; // safe upper bound
+    if (limit > 500) limit = 500;
+    var max0 = Math.floor(limit / s0);
+    var max1 = Math.floor(limit / s1);
+    var max2 = Math.floor(limit / s2);
+    for (var a = 0; a <= max0; a++) {
+      for (var b = 0; b <= max1; b++) {
+        for (var c = 0; c <= max2; c++) {
+          var val = a * s0 + b * s1 + c * s2;
+          if (val > 0 && val <= limit) {
+            reachable[val] = true;
+          }
+        }
+      }
+    }
+    // Find the largest unreachable number
+    var frob = 0;
+    for (var n = 1; n <= limit; n++) {
+      if (!reachable[n]) frob = n;
+    }
+    return frob;
+  }
+
+  // Generate random pack sizes for hard/impossible mode
+  // minFrob: minimum Frobenius number required (0 for hard, 35 for impossible)
+  function generateHardPacks(minFrob) {
+    var attempts = 0;
+    while (attempts < 200) {
+      attempts++;
+      var pool = HARD_POOL.slice();
+      var picks = [];
+
+      // First pick: must be small (<= 6)
+      var smalls = pool.filter(function(x) { return x <= 6; });
+      var first = smalls[Math.floor(Math.random() * smalls.length)];
+      picks.push(first);
+      pool.splice(pool.indexOf(first), 1);
+
+      // Pick 2 more distinct values
+      for (var i = 0; i < 2; i++) {
+        var idx = Math.floor(Math.random() * pool.length);
+        picks.push(pool[idx]);
+        pool.splice(idx, 1);
+      }
+
+      if (!arePairwiseCoprime(picks)) continue;
+      if (minFrob > 0 && frobeniusNumber(picks) < minFrob) continue;
+
+      picks.sort(function(a, b) { return a - b; });
+      return picks;
+    }
+
+    // Fallback: known coprime set with Frobenius number 47
+    return [4, 17, 25];
+  }
+
+  // Compute packet width based on nugget count
+  function packetWidth(size) {
+    // ~20px per nugget column (4 nuggets per row at 16+3=19px each)
+    var cols = Math.ceil(Math.sqrt(size * 1.3));
+    return Math.max(50, cols * 19 + 12);
+  }
+
+  // Render pack chips on start screen
+  function renderPackDemo(sizes) {
+    packDemoEl.innerHTML = "";
+    for (var i = 0; i < sizes.length; i++) {
+      var chip = document.createElement("span");
+      chip.className = "pack-chip";
+      chip.textContent = sizes[i] + " pack";
+      chip.style.background = PACK_THEMES[i].bg;
+      chip.style.color = PACK_THEMES[i].textColor;
+      chip.style.borderColor = PACK_THEMES[i].border;
+      packDemoEl.appendChild(chip);
+    }
+  }
+
+  // Render pack buttons in the game screen
+  function renderPackButtons(sizes) {
+    packButtonsEl.innerHTML = "";
+    for (var i = 0; i < sizes.length; i++) {
+      var btn = document.createElement("button");
+      btn.className = "btn-pack";
+      btn.textContent = "+ " + sizes[i] + " pack";
+      btn.style.background = "linear-gradient(135deg, " + PACK_THEMES[i].btnFrom + ", " + PACK_THEMES[i].btnTo + ")";
+      (function(size) {
+        btn.onclick = function() { addPack(size); };
+      })(sizes[i]);
+      packButtonsEl.appendChild(btn);
+    }
+  }
+
+  // Find which theme index a pack size corresponds to
+  function themeIndexFor(size) {
+    for (var i = 0; i < activePacks.length; i++) {
+      if (activePacks[i] === size) return i;
+    }
+    return 0;
+  }
+
+  function renderMysteryChips() {
+    packDemoEl.innerHTML = "";
+    for (var i = 0; i < 3; i++) {
+      var chip = document.createElement("span");
+      chip.className = "pack-chip";
+      chip.textContent = "? pack";
+      chip.style.background = PACK_THEMES[i].bg;
+      chip.style.color = PACK_THEMES[i].textColor;
+      chip.style.borderColor = PACK_THEMES[i].border;
+      packDemoEl.appendChild(chip);
+    }
+  }
+
+  // Mode switching
+  function setMode(mode) {
+    gameMode = mode;
+    document.getElementById("mode-classic").className = "mode-btn" + (mode === "classic" ? " active" : "");
+    document.getElementById("mode-hard").className = "mode-btn" + (mode === "hard" ? " active" : "");
+    document.getElementById("mode-impossible").className = "mode-btn" + (mode === "impossible" ? " active" : "");
+
+    if (mode === "classic") {
+      highScore = highScoreClassic;
+      modeDescEl.style.display = "none";
+      renderPackDemo(CLASSIC_PACKS);
+    } else if (mode === "hard") {
+      highScore = highScoreHard;
+      modeDescEl.style.display = "";
+      modeDescEl.textContent = "Random pack sizes each game!";
+      renderMysteryChips();
+    } else {
+      highScore = highScoreImpossible;
+      modeDescEl.style.display = "";
+      modeDescEl.textContent = "Random packs + some orders can't be filled!";
+      renderMysteryChips();
+    }
+
+    if (highScore > 0) {
+      startBestEl.style.display = "block";
+      startBestScore.textContent = highScore;
+    } else {
+      startBestEl.style.display = "none";
+    }
+  }
+
+  // Check if n equals exactly one pack (trivial order)
+  function isSinglePack(n) {
+    return activePacks.indexOf(n) !== -1;
+  }
+
+  // Generate an impossible order number (one that can't be made with current packs)
+  function generateImpossibleOrder() {
+    var level = totalServed;
+    var min = level < 3 ? activePacks[0] : (level < 7 ? 12 : 20);
+    var max = level < 7 ? 40 : (level < 12 ? 60 : 100);
+
+    var candidates = [];
+    for (var n = min; n <= max; n++) {
+      if (!isPossible(n)) candidates.push(n);
+    }
+
+    if (candidates.length === 0) return null; // no impossible values in range
+
+    var pick = candidates[Math.floor(Math.random() * candidates.length)];
+    if (pick === orderAmount && candidates.length > 1) {
+      var idx = candidates.indexOf(pick);
+      pick = candidates[(idx + 1) % candidates.length];
+    }
+    return pick;
+  }
+
+  // Generate a solvable order amount based on difficulty
+  function generateOrder() {
+    // In impossible mode, ~25% chance of an impossible order
+    if (gameMode === "impossible" && Math.random() < 0.25) {
+      var imp = generateImpossibleOrder();
+      if (imp !== null) {
+        orderImpossible = true;
+        return imp;
+      }
+    }
+
+    orderImpossible = false;
+    var noTrivial = (gameMode === "hard" || gameMode === "impossible");
+    var level = totalServed;
+    var min, max;
+
+    if (level < 3) {
+      // Easy: small multiples of the current pack sizes
+      var easy = [];
+      for (var i = 0; i < activePacks.length; i++) {
+        easy.push(activePacks[i]);
+        easy.push(activePacks[i] * 2);
+      }
+      // Filter to only possible values and dedupe
+      var filtered = [];
+      for (var j = 0; j < easy.length; j++) {
+        if (isPossible(easy[j]) && filtered.indexOf(easy[j]) === -1) {
+          if (!noTrivial || !isSinglePack(easy[j])) {
+            filtered.push(easy[j]);
+          }
+        }
+      }
+      if (filtered.length > 0) {
+        return filtered[Math.floor(Math.random() * filtered.length)];
+      }
+    }
+
+    if (level < 7) {
+      min = activePacks[0] * 2; max = 40;
+    } else if (level < 12) {
+      min = 20; max = 60;
+    } else {
+      min = 25; max = 100;
+    }
+
+    // Collect all possible values in range
+    var candidates = [];
+    for (var n = min; n <= max; n++) {
+      if (isPossible(n) && (!noTrivial || !isSinglePack(n))) candidates.push(n);
+    }
+
+    if (candidates.length === 0) {
+      // Fallback: find any possible value
+      for (var n = activePacks[0]; n <= 200; n++) {
+        if (isPossible(n)) { candidates.push(n); break; }
+      }
+    }
+
+    var pick = candidates[Math.floor(Math.random() * candidates.length)];
+
+    // Avoid repeating the same order
+    if (pick === orderAmount && candidates.length > 1) {
+      var idx = candidates.indexOf(pick);
+      pick = candidates[(idx + 1) % candidates.length];
+    }
+
+    return pick;
+  }
+
+  function getTrayTotal() {
+    var total = 0;
+    for (var i = 0; i < trayPacks.length; i++) {
+      total += trayPacks[i];
+    }
+    return total;
+  }
+
+  // Render a single packet with nugget shapes
+  function createPacketEl(size) {
+    var ti = themeIndexFor(size);
+    var theme = PACK_THEMES[ti];
+
+    var packet = document.createElement("div");
+    packet.className = "packet";
+    packet.style.width = packetWidth(size) + "px";
+    packet.style.background = theme.bg;
+    packet.style.borderColor = theme.border;
+    packet.title = "Click to remove";
+    packet.onclick = function() { removePack(packet, size); };
+
+    for (var i = 0; i < size; i++) {
+      var nug = document.createElement("div");
+      nug.className = "nugget";
+      packet.appendChild(nug);
+    }
+
+    var label = document.createElement("span");
+    label.className = "packet-label";
+    label.textContent = size;
+    packet.appendChild(label);
+
+    return packet;
+  }
+
+  function renderTray() {
+    var packets = trayEl.querySelectorAll(".packet");
+    for (var i = 0; i < packets.length; i++) {
+      packets[i].remove();
+    }
+
+    if (trayPacks.length === 0) {
+      trayEmptyEl.style.display = "";
+    } else {
+      trayEmptyEl.style.display = "none";
+
+      for (var i = 0; i < trayPacks.length; i++) {
+        trayEl.appendChild(createPacketEl(trayPacks[i]));
+      }
+    }
+  }
+
+  function addPack(size) {
+    trayPacks.push(size);
+    renderTray();
+    feedbackEl.style.display = "none";
+    gameControls.style.display = "";
+  }
+
+  function removePack(el, size) {
+    var idx = trayPacks.indexOf(size);
+    if (idx !== -1) {
+      trayPacks.splice(idx, 1);
+    }
+    renderTray();
+    feedbackEl.style.display = "none";
+    gameControls.style.display = "";
+  }
+
+  function clearTray() {
+    trayPacks = [];
+    trayEl.className = "tray";
+    renderTray();
+    feedbackEl.style.display = "none";
+    gameControls.style.display = "";
+  }
+
+  function serve() {
+    var total = getTrayTotal();
+
+    if (total === 0) return;
+
+    if (total === orderAmount) {
+      currentStreak++;
+      totalServed++;
+      if (currentStreak > bestStreakThisGame) {
+        bestStreakThisGame = currentStreak;
+      }
+      streakEl.textContent = currentStreak;
+      servedEl.textContent = totalServed;
+
+      trayEl.className = "tray tray-correct";
+
+      feedbackMsg.className = "feedback-overlay feedback-correct";
+      feedbackMsg.textContent = "\u2713 Order served!";
+      feedbackMsg.style.animation = "none";
+      feedbackMsg.offsetHeight;
+      feedbackMsg.style.animation = "";
+      feedbackDetail.style.display = "none";
+      feedbackEl.style.display = "";
+      gameControls.style.display = "none";
+
+      if (currentStreak > 0 && currentStreak % 5 === 0) {
+        showConfetti();
+      }
+
+      setTimeout(function() {
+        nextOrder();
+      }, 1000);
+    } else {
+      wrongAttempts++;
+      currentStreak = 0;
+      streakEl.textContent = currentStreak;
+
+      trayEl.className = "tray tray-wrong";
+
+      feedbackMsg.className = "feedback-overlay feedback-wrong";
+      feedbackMsg.textContent = "\u2717 Not quite!";
+      feedbackMsg.style.animation = "none";
+      feedbackMsg.offsetHeight;
+      feedbackMsg.style.animation = "";
+      feedbackDetail.style.display = "inline-block";
+
+      if (total < orderAmount) {
+        feedbackDetail.textContent = "You have " + total + " nuggets \u2014 that's " + (orderAmount - total) + " short!";
+      } else {
+        feedbackDetail.textContent = "You have " + total + " nuggets \u2014 that's " + (total - orderAmount) + " too many!";
+      }
+      feedbackEl.style.display = "";
+
+      setTimeout(function() {
+        trayEl.className = "tray";
+      }, 600);
+
+      if (wrongAttempts >= 3) {
+        setTimeout(function() {
+          endGame();
+        }, 1200);
+      }
+    }
+  }
+
+  function refuse() {
+    if (orderImpossible) {
+      // Correct refusal!
+      currentStreak++;
+      totalServed++;
+      if (currentStreak > bestStreakThisGame) {
+        bestStreakThisGame = currentStreak;
+      }
+      streakEl.textContent = currentStreak;
+      servedEl.textContent = totalServed;
+
+      feedbackMsg.className = "feedback-overlay feedback-correct";
+      feedbackMsg.textContent = "\u2713 Correct! That order can't be filled!";
+      feedbackMsg.style.animation = "none";
+      feedbackMsg.offsetHeight;
+      feedbackMsg.style.animation = "";
+      feedbackDetail.style.display = "none";
+      feedbackEl.style.display = "";
+      gameControls.style.display = "none";
+
+      if (currentStreak > 0 && currentStreak % 5 === 0) {
+        showConfetti();
+      }
+
+      setTimeout(function() {
+        nextOrder();
+      }, 1000);
+    } else {
+      // Wrong refusal — the order IS possible
+      wrongAttempts++;
+      currentStreak = 0;
+      streakEl.textContent = currentStreak;
+
+      feedbackMsg.className = "feedback-overlay feedback-wrong";
+      feedbackMsg.textContent = "\u2717 This order CAN be filled!";
+      feedbackMsg.style.animation = "none";
+      feedbackMsg.offsetHeight;
+      feedbackMsg.style.animation = "";
+      feedbackDetail.style.display = "none";
+      feedbackEl.style.display = "";
+
+      if (wrongAttempts >= 3) {
+        setTimeout(function() {
+          endGame();
+        }, 1200);
+      }
+    }
+  }
+
+  function nextOrder() {
+    wrongAttempts = 0;
+    trayPacks = [];
+    trayEl.className = "tray";
+    feedbackEl.style.display = "none";
+    gameControls.style.display = "";
+
+    orderAmount = generateOrder();
+    orderNumberEl.textContent = orderAmount;
+
+    orderDisplay.style.animation = "none";
+    orderDisplay.offsetHeight;
+    orderDisplay.style.animation = "";
+
+    renderTray();
+  }
+
+  function startGame() {
+    currentStreak = 0;
+    bestStreakThisGame = 0;
+    totalServed = 0;
+    wrongAttempts = 0;
+
+    // Set up packs for this game
+    if (gameMode === "hard" || gameMode === "impossible") {
+      activePacks = generateHardPacks(gameMode === "impossible" ? 35 : 0);
+      highScore = gameMode === "hard" ? highScoreHard : highScoreImpossible;
+    } else {
+      activePacks = CLASSIC_PACKS.slice();
+      highScore = highScoreClassic;
+    }
+
+    // Show/hide refuse button
+    btnRefuse.style.display = gameMode === "impossible" ? "" : "none";
+
+    buildPossibleSet(activePacks);
+    renderPackButtons(activePacks);
+
+    streakEl.textContent = "0";
+    servedEl.textContent = "0";
+    bestScoreEl.textContent = highScore;
+
+    startScreen.style.display    = "none";
+    gameoverScreen.style.display = "none";
+    gameScreen.style.display     = "block";
+
+    nextOrder();
+  }
+
+  function endGame() {
+    gameScreen.style.display     = "none";
+    gameoverScreen.style.display = "block";
+
+    finalStreakEl.textContent = bestStreakThisGame;
+    finalServedEl.textContent = "Total orders served: " + totalServed;
+
+    var storageKey = gameMode === "impossible" ? "foodTruck_impossible_highScore"
+      : gameMode === "hard" ? "foodTruck_hardMode_highScore" : "foodTruck_highScore";
+
+    if (bestStreakThisGame > highScore) {
+      highScore = bestStreakThisGame;
+      if (gameMode === "impossible") {
+        highScoreImpossible = highScore;
+      } else if (gameMode === "hard") {
+        highScoreHard = highScore;
+      } else {
+        highScoreClassic = highScore;
+      }
+      localStorage.setItem(storageKey, highScore);
+      gameoverBest.textContent = "\uD83C\uDF89 New best streak: " + bestStreakThisGame + "!";
+      showConfetti();
+    } else {
+      gameoverBest.textContent = "Best streak: " + highScore;
+    }
+  }
+
+  function resetGame() {
+    // Return to start screen so player can switch modes
+    gameoverScreen.style.display = "none";
+    startScreen.style.display    = "";
+    setMode(gameMode);
+  }
+
+  function showConfetti() {
+    celebration.innerHTML = "";
+    var colors = ["#7c3aed", "#4c6ef5", "#10b981", "#f59e0b", "#ec4899", "#34d399"];
+    for (var i = 0; i < 30; i++) {
+      var dot = document.createElement("div");
+      dot.className = "confetti";
+      dot.style.left = Math.random() * 100 + "%";
+      dot.style.top  = Math.random() * 40 + "%";
+      dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+      dot.style.animation  = "confettiFall 1s " + (Math.random() * 0.4) + "s ease-out forwards";
+      celebration.appendChild(dot);
+    }
+  }
+
+  // Init
+  buildPossibleSet(CLASSIC_PACKS);
+  setMode("classic");
+</script>
+</body>
+</html>

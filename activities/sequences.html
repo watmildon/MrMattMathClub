@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sequences - Mr. Matt Math Club</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237c3aed'/><text x='50' y='76' font-size='80' font-weight='bold' text-anchor='middle' fill='white'>M</text></svg>">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    /* ---- Game card ---- */
+    .game-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ---- Score display ---- */
+    .score-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .score-item {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.15rem;
+    }
+
+    .score-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .score-bar .round-value {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #7c3aed;
+    }
+
+    .score-bar .high-score-value {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #f59e0b;
+    }
+
+    .score-bar .score-value {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #4c6ef5;
+      transition: color 0.3s;
+    }
+
+    .score-bar .score-value.score-bump {
+      color: #10b981;
+    }
+
+    /* ---- Sequence display ---- */
+    .sequence-area {
+      margin-bottom: 1.5rem;
+    }
+
+    .sequence-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .seq-cell {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #1e293b;
+      background: white;
+      border: 3px solid #cbd5e1;
+    }
+
+    .seq-cell.blank {
+      border: 3px dashed #7c3aed;
+      background: #f5f3ff;
+      color: #7c3aed;
+      animation: blankPulse 2s ease-in-out infinite;
+      cursor: pointer;
+    }
+
+    .seq-cell.blank.active {
+      border-color: #7c3aed;
+      background: #ede9fe;
+      animation: activePulse 1.5s ease-in-out infinite;
+    }
+
+    .seq-cell.blank.has-value {
+      animation: none;
+      border-color: #7c3aed;
+      background: #ede9fe;
+    }
+
+    .seq-cell.blank.filled {
+      animation: none;
+      border: 3px solid #10b981;
+      background: #d1fae5;
+      color: #059669;
+    }
+
+    .seq-cell.correct-highlight {
+      border-color: #10b981;
+      background: #d1fae5;
+      color: #059669;
+      animation: none;
+    }
+
+    .seq-cell.wrong-highlight {
+      border-color: #dc2626;
+      background: #fee2e2;
+      color: #dc2626;
+      animation: none;
+    }
+
+    .seq-arrow {
+      display: flex;
+      align-items: center;
+      color: #94a3b8;
+      font-size: 1rem;
+    }
+
+    @keyframes blankPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.3); }
+      50%      { box-shadow: 0 0 0 6px rgba(124, 58, 237, 0); }
+    }
+
+    @keyframes activePulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }
+      50%      { box-shadow: 0 0 0 8px rgba(124, 58, 237, 0); }
+    }
+
+    .pattern-hint {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 0.5rem;
+      min-height: 1.2em;
+    }
+
+    /* ---- Numpad ---- */
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      width: 144px;
+      margin: 0 auto 1rem;
+    }
+
+    .numpad-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      border: 2px solid #e2e8f0;
+      background: white;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .numpad-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+      background: #f8fafc;
+    }
+
+    .numpad-btn:active {
+      transform: translateY(0);
+    }
+
+    .numpad-btn.submit-btn {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      color: white;
+      border-color: transparent;
+    }
+
+    .numpad-btn.submit-btn:hover {
+      background: linear-gradient(135deg, #059669, #10b981);
+    }
+
+    .numpad-btn.backspace-btn {
+      background: #fef3c7;
+      color: #92400e;
+      border-color: transparent;
+    }
+
+    .numpad-btn.backspace-btn:hover {
+      background: #fde68a;
+    }
+
+    /* ---- Buttons ---- */
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-again {
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      margin-top: 1.5rem;
+    }
+
+    .btn-next {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      margin-top: 1rem;
+    }
+
+    /* ---- Feedback states ---- */
+    .feedback {
+      display: none;
+      margin-top: 1rem;
+    }
+
+    .feedback.visible {
+      display: block;
+    }
+
+    .feedback-correct {
+      color: #059669;
+      font-size: 1.3rem;
+      font-weight: 700;
+      animation: popIn 0.35s ease;
+    }
+
+    .feedback-wrong {
+      animation: popIn 0.35s ease;
+    }
+
+    .feedback-wrong .wrong-label {
+      color: #dc2626;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .feedback-wrong .explanation {
+      background: #fef3c7;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      font-size: 1.05rem;
+      color: #92400e;
+      line-height: 1.5;
+      margin-bottom: 0.5rem;
+    }
+
+    .final-score {
+      font-size: 1.1rem;
+      color: #64748b;
+      margin-top: 0.75rem;
+    }
+
+    @keyframes popIn {
+      0%   { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ---- Help button ---- */
+    .help-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #7c3aed;
+      color: white;
+      border: none;
+      font-size: 1.25rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s, box-shadow 0.15s;
+      margin-left: auto;
+    }
+
+    .help-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Help dialog overlay */
+    .help-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      padding: 1rem;
+    }
+
+    .help-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .help-dialog {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      max-width: 400px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      transform: scale(0.9);
+      transition: transform 0.2s;
+    }
+
+    .help-overlay.visible .help-dialog {
+      transform: scale(1);
+    }
+
+    .help-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .help-section {
+      margin-bottom: 1rem;
+    }
+
+    .help-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+
+    .help-section p,
+    .help-section li {
+      font-size: 0.95rem;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    .help-section ul {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    .help-section li {
+      margin-bottom: 0.25rem;
+    }
+
+    .help-close-btn {
+      display: block;
+      width: 100%;
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: transform 0.15s;
+    }
+
+    .help-close-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* ---- Celebration ---- */
+    .celebration {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      opacity: 0;
+    }
+
+    @keyframes confettiFall {
+      0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(120px) rotate(360deg); }
+    }
+
+    .game-wrapper {
+      position: relative;
+    }
+
+    .back-row {
+      max-width: 560px;
+      display: flex;
+      align-items: center;
+    }
+
+    @media (max-width: 420px) {
+      .seq-cell {
+        width: 42px;
+        height: 42px;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mr. Matt Math Club</h1>
+  </header>
+
+  <main>
+    <div class="back-row">
+      <a href="../index.html" class="back-btn" aria-label="Back to Activities"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10H5M5 10l5-5M5 10l5 5"/></svg></a>
+      <button class="help-btn" id="help-btn" aria-label="Help">?</button>
+    </div>
+
+    <!-- Help Dialog -->
+    <div class="help-overlay" id="help-overlay">
+      <div class="help-dialog">
+        <div class="help-title">How to Play Sequences</div>
+
+        <div class="help-section">
+          <h3>1. Find the Pattern</h3>
+          <p>Look at the numbers shown and figure out the pattern (counting, skip counting, or something trickier!).</p>
+        </div>
+
+        <div class="help-section">
+          <h3>2. Fill in the Blanks</h3>
+          <p>Use the number pad to type the missing number, then tap the check mark to submit.</p>
+        </div>
+
+        <div class="help-section">
+          <h3>3. Keep Going!</h3>
+          <p>Each correct answer earns points. The patterns get harder as you go. One wrong answer ends the game!</p>
+        </div>
+
+        <div class="help-section">
+          <h3>4. Scoring</h3>
+          <ul>
+            <li>Easy patterns: 1 point each</li>
+            <li>Medium patterns: 2-3 points each</li>
+            <li>Hard patterns: 5-10 points each</li>
+          </ul>
+        </div>
+
+        <button class="help-close-btn" id="help-close-btn">Got it!</button>
+      </div>
+    </div>
+
+    <div class="game-wrapper">
+      <div class="game-card" id="game-card">
+        <h2 class="activity-title">Sequences</h2>
+        <div class="score-bar">
+          <div class="score-item"><span class="score-label">Round</span><span class="round-value" id="round">1</span></div>
+          <div class="score-item"><span class="score-label">Best</span><span class="high-score-value" id="high-score">0</span></div>
+          <div class="score-item"><span class="score-label">Score</span><span class="score-value" id="score">0</span></div>
+        </div>
+
+        <div id="game-area">
+          <div class="sequence-area" id="sequence-area"></div>
+
+          <div class="numpad" id="numpad">
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('1')">1</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('2')">2</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('3')">3</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('4')">4</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('5')">5</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('6')">6</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('7')">7</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('8')">8</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('9')">9</button>
+            <button class="numpad-btn backspace-btn" onclick="event.stopPropagation(); doBackspace()" aria-label="Backspace">&larr;</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('0')">0</button>
+            <button class="numpad-btn submit-btn" onclick="event.stopPropagation(); submitAnswer()" aria-label="Submit">&check;</button>
+          </div>
+
+          <div class="feedback" id="feedback-correct">
+            <p class="feedback-correct" id="correct-msg"></p>
+            <button class="btn btn-next" onclick="event.stopPropagation(); goNextRound()">Next Round</button>
+          </div>
+
+          <div class="feedback feedback-wrong" id="feedback-wrong">
+            <p class="wrong-label" id="wrong-label"></p>
+            <div class="explanation" id="explanation"></div>
+            <p class="final-score" id="final-score"></p>
+            <button class="btn btn-again" onclick="event.stopPropagation(); resetGame()">Play Again</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="celebration" id="celebration"></div>
+    </div>
+  </main>
+
+<script>
+  // ===== State =====
+  var score = 0;
+  var round = 1;
+  var awaitingNext = false;
+  var gameOver = false;
+  var highScore = parseInt(localStorage.getItem("sequences_highScore")) || 0;
+
+  var currentSequence = [];   // full array of numbers
+  var blankIndices = [];       // indices that are hidden
+  var currentBlankIdx = 0;     // which blank we're currently filling (index into blankIndices)
+  var typedValue = "";
+  var lastType = "";
+
+  // ===== DOM refs =====
+  var scoreEl = document.getElementById("score");
+  var roundEl = document.getElementById("round");
+  var highScoreEl = document.getElementById("high-score");
+  var sequenceAreaEl = document.getElementById("sequence-area");
+  var numpadEl = document.getElementById("numpad");
+  var feedbackCorrect = document.getElementById("feedback-correct");
+  var correctMsg = document.getElementById("correct-msg");
+  var feedbackWrong = document.getElementById("feedback-wrong");
+  var wrongLabel = document.getElementById("wrong-label");
+  var explanationEl = document.getElementById("explanation");
+  var finalScoreEl = document.getElementById("final-score");
+  var celebration = document.getElementById("celebration");
+  var helpOverlayEl = document.getElementById("help-overlay");
+  var helpBtnEl = document.getElementById("help-btn");
+  var helpCloseBtnEl = document.getElementById("help-close-btn");
+
+  // ===== Difficulty =====
+
+  // Compute a starting round based on prior best score so returning
+  // players skip through easy tiers faster.  The tier thresholds
+  // (cumulative max points if every round is answered correctly):
+  //   Rounds 1-5  → 5 pts  (5×1)
+  //   Rounds 6-10 → 15 pts (5+5×2)
+  //   Rounds 11-15→ 30 pts (15+5×3)
+  //   Rounds 16-25→ 80 pts (30+10×5)
+  // We offset halfway into the tier the player previously reached.
+  function computeStartRound() {
+    if (highScore >= 80) return 23;  // jump into late Advanced
+    if (highScore >= 30) return 14;  // jump into mid Intermediate
+    if (highScore >= 15) return 9;   // jump into mid Easy+
+    if (highScore >= 5)  return 4;   // jump into late Easy
+    return 1;
+  }
+
+  var startRound = computeStartRound();
+
+  function getPointValue() {
+    if (round <= 5)  return 1;
+    if (round <= 10) return 2;
+    if (round <= 15) return 3;
+    if (round <= 25) return 5;
+    return 10;
+  }
+
+  function getAvailableTypes() {
+    var easy = ["count_1", "count_2", "count_5", "backward_1"];
+    var easyPlus = ["count_3", "count_4"];
+    var intermediate = ["backward_2", "backward_3", "backward_4", "backward_5"];
+    var advanced = ["add_pattern", "sub_pattern"];
+    var advancedPlus = ["add_sub"];
+
+    if (round <= 5)  return easy;
+    if (round <= 10) return easy.concat(easyPlus);
+    if (round <= 15) return easy.concat(easyPlus).concat(intermediate);
+    if (round <= 25) return easy.concat(easyPlus).concat(intermediate).concat(advanced);
+    return easy.concat(easyPlus).concat(intermediate).concat(advanced).concat(advancedPlus);
+  }
+
+  function isAdvancedType(type) {
+    return type === "add_pattern" || type === "sub_pattern" || type === "add_sub";
+  }
+
+  // ===== Sequence Generation =====
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function generateSequence() {
+    var types = getAvailableTypes();
+    var type;
+    var tries = 0;
+    do {
+      type = types[Math.floor(Math.random() * types.length)];
+      tries++;
+    } while (tries < 20 && type === lastType && types.length > 1);
+    lastType = type;
+
+    var seq = [];
+    var len = isAdvancedType(type) ? 12 : 6;
+
+    if (type === "count_1") {
+      var start = randInt(1, 20);
+      for (var i = 0; i < len; i++) seq.push(start + i);
+    } else if (type === "count_2") {
+      var start = randInt(0, 10) * 2;
+      for (var i = 0; i < len; i++) seq.push(start + i * 2);
+    } else if (type === "count_3") {
+      var start = randInt(0, 7) * 3;
+      for (var i = 0; i < len; i++) seq.push(start + i * 3);
+    } else if (type === "count_4") {
+      var start = randInt(0, 5) * 4;
+      for (var i = 0; i < len; i++) seq.push(start + i * 4);
+    } else if (type === "count_5") {
+      var start = randInt(0, 10) * 5;
+      for (var i = 0; i < len; i++) seq.push(start + i * 5);
+    } else if (type === "backward_1") {
+      var start = randInt(10, 30);
+      for (var i = 0; i < len; i++) {
+        var val = start - i;
+        if (val < 0) { start++; val = start - i; }
+        seq.push(val);
+      }
+    } else if (type === "backward_2") {
+      var start = randInt(10, 20) * 2;
+      for (var i = 0; i < len; i++) seq.push(start - i * 2);
+    } else if (type === "backward_3") {
+      var start = randInt(7, 15) * 3;
+      for (var i = 0; i < len; i++) seq.push(start - i * 3);
+    } else if (type === "backward_4") {
+      var start = randInt(6, 12) * 4;
+      for (var i = 0; i < len; i++) seq.push(start - i * 4);
+    } else if (type === "backward_5") {
+      var start = randInt(6, 12) * 5;
+      for (var i = 0; i < len; i++) seq.push(start - i * 5);
+    } else if (type === "add_pattern") {
+      var a = randInt(1, 3);
+      var b = randInt(2, 5);
+      if (a === b) b = a + 1;
+      var start = randInt(1, 10);
+      seq.push(start);
+      for (var i = 1; i < len; i++) {
+        var step = (i % 2 === 1) ? a : b;
+        seq.push(seq[i - 1] + step);
+      }
+    } else if (type === "sub_pattern") {
+      var a = randInt(1, 3);
+      var b = randInt(2, 4);
+      if (a === b) b = a + 1;
+      // start high enough so no negatives
+      var minNeeded = 0;
+      var cur = 0;
+      for (var i = 1; i < len; i++) {
+        var step = (i % 2 === 1) ? a : b;
+        cur -= step;
+        if (cur < minNeeded) minNeeded = cur;
+      }
+      var start = randInt(Math.abs(minNeeded), Math.abs(minNeeded) + 15);
+      seq.push(start);
+      for (var i = 1; i < len; i++) {
+        var step = (i % 2 === 1) ? a : b;
+        seq.push(seq[i - 1] - step);
+      }
+    } else if (type === "add_sub") {
+      var a = randInt(3, 6);
+      var b = randInt(1, a - 1);
+      var start = randInt(1, 10);
+      seq.push(start);
+      for (var i = 1; i < len; i++) {
+        if (i % 2 === 1) {
+          seq.push(seq[i - 1] + a);
+        } else {
+          seq.push(seq[i - 1] - b);
+        }
+      }
+    }
+
+    // Safety: ensure no negatives
+    var minVal = Math.min.apply(null, seq);
+    if (minVal < 0) {
+      var offset = Math.abs(minVal);
+      for (var i = 0; i < seq.length; i++) seq[i] += offset;
+    }
+
+    currentSequence = seq;
+
+    // Choose blanks: not first, not last, spread them out
+    var numBlanks = isAdvancedType(type) ? 3 : 2;
+    blankIndices = chooseBlanks(seq.length, numBlanks);
+    currentBlankIdx = 0;
+    typedValue = "";
+  }
+
+  function chooseBlanks(len, count) {
+    // Available positions: not first, not last
+    var available = [];
+    for (var i = 1; i < len - 1; i++) available.push(i);
+
+    // Shuffle and pick, ensuring they're not all adjacent
+    var blanks = [];
+    var shuffled = available.slice();
+    for (var i = shuffled.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = shuffled[i];
+      shuffled[i] = shuffled[j];
+      shuffled[j] = tmp;
+    }
+
+    // Pick blanks with at least 1 gap between them
+    for (var i = 0; i < shuffled.length && blanks.length < count; i++) {
+      var candidate = shuffled[i];
+      var tooClose = false;
+      for (var j = 0; j < blanks.length; j++) {
+        if (Math.abs(blanks[j] - candidate) < 2) {
+          tooClose = true;
+          break;
+        }
+      }
+      if (!tooClose) blanks.push(candidate);
+    }
+
+    // Fallback if we couldn't find enough spaced blanks
+    if (blanks.length < count) {
+      for (var i = 0; i < shuffled.length && blanks.length < count; i++) {
+        if (blanks.indexOf(shuffled[i]) === -1) blanks.push(shuffled[i]);
+      }
+    }
+
+    blanks.sort(function(a, b) { return a - b; });
+    return blanks;
+  }
+
+  // ===== Pattern Description =====
+  function describePattern(type) {
+    if (type === "count_1") return "Count by 1s";
+    if (type === "count_2") return "Count by 2s";
+    if (type === "count_3") return "Count by 3s";
+    if (type === "count_4") return "Count by 4s";
+    if (type === "count_5") return "Count by 5s";
+    if (type === "backward_1") return "Count backwards by 1s";
+    if (type === "backward_2") return "Count backwards by 2s";
+    if (type === "backward_3") return "Count backwards by 3s";
+    if (type === "backward_4") return "Count backwards by 4s";
+    if (type === "backward_5") return "Count backwards by 5s";
+    if (type === "add_pattern") {
+      var a = currentSequence[1] - currentSequence[0];
+      var b = currentSequence[2] - currentSequence[1];
+      return "Pattern: +" + a + ", +" + b + " (repeating)";
+    }
+    if (type === "sub_pattern") {
+      var a = currentSequence[0] - currentSequence[1];
+      var b = currentSequence[1] - currentSequence[2];
+      return "Pattern: -" + a + ", -" + b + " (repeating)";
+    }
+    if (type === "add_sub") {
+      var a = currentSequence[1] - currentSequence[0];
+      var b = currentSequence[1] - currentSequence[2];
+      return "Pattern: +" + a + ", -" + b + " (repeating)";
+    }
+    return "";
+  }
+
+  // ===== Rendering =====
+  function renderSequence() {
+    sequenceAreaEl.innerHTML = "";
+
+    var rowSize = isAdvancedType(lastType) ? 6 : currentSequence.length;
+    var rowCount = Math.ceil(currentSequence.length / rowSize);
+
+    for (var r = 0; r < rowCount; r++) {
+      var rowDiv = document.createElement("div");
+      rowDiv.className = "sequence-row";
+
+      var startIdx = r * rowSize;
+      var endIdx = Math.min(startIdx + rowSize, currentSequence.length);
+
+      for (var i = startIdx; i < endIdx; i++) {
+        if (i > startIdx) {
+          var arrow = document.createElement("span");
+          arrow.className = "seq-arrow";
+          arrow.innerHTML = "&#x2192;";
+          rowDiv.appendChild(arrow);
+        }
+
+        var cell = document.createElement("div");
+        cell.className = "seq-cell";
+        cell.dataset.index = i;
+
+        var blankPos = blankIndices.indexOf(i);
+        if (blankPos !== -1) {
+          cell.classList.add("blank");
+          if (blankPos < currentBlankIdx) {
+            // Already filled correctly
+            cell.classList.remove("blank");
+            cell.classList.add("correct-highlight");
+            cell.textContent = currentSequence[i];
+          } else if (blankPos === currentBlankIdx) {
+            // Current blank
+            cell.classList.add("active");
+            cell.textContent = typedValue || "?";
+            if (typedValue) cell.classList.add("has-value");
+          } else {
+            // Future blank
+            cell.textContent = "?";
+          }
+        } else {
+          cell.textContent = currentSequence[i];
+        }
+
+        rowDiv.appendChild(cell);
+      }
+
+      sequenceAreaEl.appendChild(rowDiv);
+    }
+  }
+
+  function updateActiveBlank() {
+    var cells = sequenceAreaEl.querySelectorAll(".seq-cell");
+    for (var i = 0; i < cells.length; i++) {
+      var idx = parseInt(cells[i].dataset.index);
+      var blankPos = blankIndices.indexOf(idx);
+      if (blankPos === currentBlankIdx) {
+        cells[i].textContent = typedValue || "?";
+        if (typedValue) {
+          cells[i].classList.add("has-value");
+        } else {
+          cells[i].classList.remove("has-value");
+        }
+      }
+    }
+  }
+
+  // ===== Input =====
+  function typeDigit(d) {
+    if (awaitingNext || gameOver) return;
+    if (typedValue.length >= 3) return;
+    typedValue += d;
+    updateActiveBlank();
+  }
+
+  function doBackspace() {
+    if (awaitingNext || gameOver) return;
+    if (typedValue.length > 0) {
+      typedValue = typedValue.slice(0, -1);
+      updateActiveBlank();
+    }
+  }
+
+  function submitAnswer() {
+    if (awaitingNext || gameOver) return;
+    if (typedValue.length === 0) return;
+
+    var entered = parseInt(typedValue, 10);
+    var targetIndex = blankIndices[currentBlankIdx];
+    var correct = currentSequence[targetIndex];
+
+    if (entered === correct) {
+      // Correct!
+      currentBlankIdx++;
+
+      if (currentBlankIdx >= blankIndices.length) {
+        // All blanks filled — round complete
+        awaitingNext = true;
+        var pts = getPointValue();
+        score += pts;
+        scoreEl.textContent = "+" + pts;
+        scoreEl.classList.add("score-bump");
+        setTimeout(function() {
+          scoreEl.textContent = score;
+          scoreEl.classList.remove("score-bump");
+        }, 1200);
+
+        renderSequence();
+        numpadEl.style.visibility = "hidden";
+        correctMsg.textContent = describePattern(lastType);
+        feedbackCorrect.classList.add("visible");
+        showConfetti();
+      } else {
+        // More blanks to fill
+        typedValue = "";
+        renderSequence();
+        showConfetti();
+      }
+    } else {
+      // Wrong — game over
+      gameOver = true;
+      awaitingNext = true;
+
+      // Highlight the wrong cell
+      var cells = sequenceAreaEl.querySelectorAll(".seq-cell");
+      for (var i = 0; i < cells.length; i++) {
+        var idx = parseInt(cells[i].dataset.index);
+        if (idx === targetIndex) {
+          cells[i].classList.remove("blank", "active", "has-value");
+          cells[i].classList.add("wrong-highlight");
+          cells[i].textContent = entered;
+        }
+      }
+
+      numpadEl.style.visibility = "hidden";
+      wrongLabel.textContent = "Not quite!";
+      explanationEl.textContent = describePattern(lastType) + ": " + currentSequence.join(", ");
+
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("sequences_highScore", highScore);
+        highScoreEl.textContent = highScore;
+        finalScoreEl.textContent = "New best: " + score + " point" + (score !== 1 ? "s" : "") + "!";
+      } else {
+        finalScoreEl.textContent = "You scored " + score + " point" + (score !== 1 ? "s" : "") + "!";
+      }
+      feedbackWrong.classList.add("visible");
+    }
+  }
+
+  // ===== Keyboard input =====
+  document.addEventListener("keydown", function(e) {
+    if (awaitingNext && !gameOver && (e.key === " " || e.key === "Enter")) {
+      goNextRound();
+      return;
+    }
+    if (e.key >= "0" && e.key <= "9") {
+      typeDigit(e.key);
+    } else if (e.key === "Backspace") {
+      doBackspace();
+    } else if (e.key === "Enter") {
+      submitAnswer();
+    }
+  });
+
+  // ===== Round management =====
+  function nextRound() {
+    typedValue = "";
+    awaitingNext = false;
+    generateSequence();
+    renderSequence();
+    roundEl.textContent = round;
+    scoreEl.textContent = score;
+    numpadEl.style.visibility = "visible";
+    feedbackCorrect.classList.remove("visible");
+    feedbackWrong.classList.remove("visible");
+  }
+
+  function goNextRound() {
+    if (!awaitingNext || gameOver) return;
+    round++;
+    nextRound();
+  }
+
+  function resetGame() {
+    score = 0;
+    startRound = computeStartRound();
+    round = startRound;
+    gameOver = false;
+    lastType = "";
+    nextRound();
+  }
+
+  // ===== Confetti =====
+  function showConfetti() {
+    celebration.innerHTML = "";
+    var colors = ["#7c3aed", "#4c6ef5", "#10b981", "#f59e0b", "#ec4899", "#34d399"];
+    for (var i = 0; i < 20; i++) {
+      var dot = document.createElement("div");
+      dot.className = "confetti";
+      dot.style.left = Math.random() * 100 + "%";
+      dot.style.top = Math.random() * 40 + "%";
+      dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+      dot.style.animation = "confettiFall 0.8s " + (Math.random() * 0.3) + "s ease-out forwards";
+      celebration.appendChild(dot);
+    }
+  }
+
+  // ===== Help Dialog =====
+  function showHelp() {
+    helpOverlayEl.classList.add("visible");
+  }
+
+  function hideHelp() {
+    helpOverlayEl.classList.remove("visible");
+    localStorage.setItem("sequences_helpSeen", "true");
+  }
+
+  helpBtnEl.addEventListener("click", showHelp);
+  helpCloseBtnEl.addEventListener("click", hideHelp);
+  helpOverlayEl.addEventListener("click", function(e) {
+    if (e.target === helpOverlayEl) hideHelp();
+  });
+
+  // ===== Start =====
+  highScoreEl.textContent = highScore;
+  nextRound();
+
+  if (!localStorage.getItem("sequences_helpSeen")) {
+    showHelp();
+  }
+</script>
+</body>
+</html>

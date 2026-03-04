@@ -66,6 +66,18 @@
         <p>Fill a bingo card and see how many rolls to win!</p>
       </a>
 
+      <a href="activities/sequences.html" class="card sequences">
+        <span class="icon">&#x1F522;</span>
+        <h2>Sequences</h2>
+        <p>Find the missing numbers in the pattern!</p>
+      </a>
+
+      <a href="activities/food-truck.html" class="card food-truck">
+        <span class="icon">&#x1F69A;</span>
+        <h2>Food Truck</h2>
+        <p>Pack nuggets to fill customer orders. Can you keep your streak alive?</p>
+      </a>
+
       <a href="activities/nim.html" class="card nim">
         <span class="icon">&#x1F9E0;</span>
         <h2>NIM</h2>
@@ -134,7 +146,9 @@
   var scoreActivities = [
     { selector: '.sharing-numbers', key: 'sharingNumbers_highScore' },
     { selector: '.cake-cutting',    key: 'cakeCutting_highScore' },
-    { selector: '.number-bonds',    key: 'numberBonds_highScore' }
+    { selector: '.number-bonds',    key: 'numberBonds_highScore' },
+    { selector: '.sequences',       key: 'sequences_highScore' },
+    { selector: '.food-truck',      key: 'foodTruck_highScore' }
   ];
   scoreActivities.forEach(function(act) {
     var score = parseInt(localStorage.getItem(act.key));
