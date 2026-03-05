@@ -143,6 +143,8 @@ main {
 .back-row {
   max-width: 520px;
   margin: 0 auto 0.75rem;
+  display: flex;
+  align-items: center;
 }
 
 .back-btn {

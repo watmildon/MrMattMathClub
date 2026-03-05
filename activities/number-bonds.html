@@ -325,6 +325,120 @@
     .game-wrapper {
       position: relative;
     }
+
+    /* Help button */
+    .help-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #7c3aed;
+      color: white;
+      border: none;
+      font-size: 1.25rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s, box-shadow 0.15s;
+      margin-left: auto;
+    }
+
+    .help-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Help dialog overlay */
+    .help-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      padding: 1rem;
+    }
+
+    .help-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .help-dialog {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      max-width: 400px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      transform: scale(0.9);
+      transition: transform 0.2s;
+    }
+
+    .help-overlay.visible .help-dialog {
+      transform: scale(1);
+    }
+
+    .help-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .help-section {
+      margin-bottom: 1rem;
+    }
+
+    .help-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+
+    .help-section p,
+    .help-section li {
+      font-size: 0.95rem;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    .help-section ul {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    .help-section li {
+      margin-bottom: 0.25rem;
+    }
+
+    .help-close-btn {
+      display: block;
+      width: 100%;
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: transform 0.15s;
+    }
+
+    .help-close-btn:hover {
+      transform: translateY(-2px);
+    }
   </style>
 </head>
 <body>
@@ -335,6 +449,41 @@
   <main>
     <div class="back-row">
       <a href="../index.html" class="back-btn" aria-label="Back to Activities"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10H5M5 10l5-5M5 10l5 5"/></svg></a>
+      <button class="help-btn" id="help-btn" aria-label="Help">?</button>
+    </div>
+
+    <!-- Help Dialog -->
+    <div class="help-overlay" id="help-overlay">
+      <div class="help-dialog">
+        <div class="help-title">How to Play Number Bonds</div>
+
+        <div class="help-section">
+          <h3>1. What is a Number Bond?</h3>
+          <p>A number bond shows how a number splits into two parts. For example, 7 can split into 3 and 4 because 3 + 4 = 7.</p>
+        </div>
+
+        <div class="help-section">
+          <h3>2. Find the Missing Number</h3>
+          <p>One of the three circles will be empty. Use the number pad to type the missing number, then press the green checkmark to submit.</p>
+        </div>
+
+        <div class="help-section">
+          <h3>3. Scoring</h3>
+          <p>Each correct answer earns points. Later rounds use bigger numbers and are worth more points!</p>
+        </div>
+
+        <div class="help-section">
+          <h3>4. One Mistake and You're Out!</h3>
+          <p>A wrong answer ends the game. Try to beat your high score!</p>
+        </div>
+
+        <div class="help-section">
+          <h3>5. Tips</h3>
+          <p>If you know two numbers, you can add or subtract to find the missing one. You can also use the keyboard to type numbers and press Enter to submit.</p>
+        </div>
+
+        <button class="help-close-btn" id="help-close-btn">Got it!</button>
+      </div>
     </div>
 
     <div class="game-wrapper">
@@ -653,9 +802,43 @@
     }
   }
 
+  // ===== Help dialog =====
+  var helpOverlayEl = document.getElementById("help-overlay");
+  var helpBtnEl = document.getElementById("help-btn");
+  var helpCloseBtnEl = document.getElementById("help-close-btn");
+
+  function showHelp() {
+    helpOverlayEl.classList.add("visible");
+  }
+
+  function hideHelp() {
+    helpOverlayEl.classList.remove("visible");
+    localStorage.setItem("numberBonds_helpSeen", "true");
+  }
+
+  helpBtnEl.addEventListener("click", showHelp);
+  helpCloseBtnEl.addEventListener("click", hideHelp);
+  helpOverlayEl.addEventListener("click", function(e) {
+    if (e.target === helpOverlayEl) {
+      hideHelp();
+    }
+  });
+
+  // ESC to close help
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape" && helpOverlayEl.classList.contains("visible")) {
+      hideHelp();
+    }
+  });
+
   // ===== Start =====
   highScoreEl.textContent = highScore;
   nextRound();
+
+  // Show help on first visit
+  if (!localStorage.getItem("numberBonds_helpSeen")) {
+    showHelp();
+  }
 </script>
 </body>
 </html>
