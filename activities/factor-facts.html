@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factor Facts - Mr. Matt Math Club</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237c3aed'/><text x='50' y='76' font-size='80' font-weight='bold' text-anchor='middle' fill='white'>M</text></svg>">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+
+
+    /* ---- Game card ---- */
+    .game-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ---- Score display ---- */
+    .score-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .score-item {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.15rem;
+    }
+
+    .score-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .score-bar .round-value {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #7c3aed;
+    }
+
+    .score-bar .high-score-value {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #f59e0b;
+    }
+
+    .score-bar .score-value {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #4c6ef5;
+      transition: color 0.3s;
+    }
+
+    .score-bar .score-value.score-bump {
+      color: #10b981;
+    }
+
+    /* ---- Bond layout ---- */
+    .bond-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .bond-diagram {
+      position: relative;
+      width: 240px;
+      height: 180px;
+      flex-shrink: 0;
+    }
+
+    .bond-lines {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .bond-line {
+      stroke: #94a3b8;
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
+    /* ---- Circles ---- */
+    .bond-circle {
+      position: absolute;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #1e293b;
+      background: white;
+      border: 3px solid #94a3b8;
+      z-index: 1;
+    }
+
+    .circle-product {
+      width: 90px;
+      height: 90px;
+      font-size: 1.8rem;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .circle-factor {
+      width: 70px;
+      height: 70px;
+      font-size: 1.5rem;
+    }
+
+    .circle-factor-a {
+      left: 0;
+      top: 0;
+    }
+
+    .circle-factor-b {
+      left: 0;
+      bottom: 0;
+    }
+
+    /* Multiply symbol between the two factor circles */
+    .multiply-symbol {
+      position: absolute;
+      left: 35px;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #94a3b8;
+      z-index: 2;
+    }
+
+    .bond-circle.blank {
+      border: 3px dashed #7c3aed;
+      background: #f5f3ff;
+      color: #7c3aed;
+      animation: blankPulse 2s ease-in-out infinite;
+      cursor: pointer;
+    }
+
+    .bond-circle.blank.has-value {
+      animation: none;
+      border-color: #7c3aed;
+      background: #ede9fe;
+    }
+
+    @keyframes blankPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.3); }
+      50%      { box-shadow: 0 0 0 8px rgba(124, 58, 237, 0); }
+    }
+
+    .bond-circle.correct-highlight {
+      border-color: #10b981;
+      background: #d1fae5;
+      color: #059669;
+      animation: none;
+    }
+
+    .bond-circle.wrong-highlight {
+      border-color: #dc2626;
+      background: #fee2e2;
+      color: #dc2626;
+      animation: none;
+    }
+
+    /* ---- Numpad ---- */
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      flex-shrink: 0;
+      width: 144px;
+    }
+
+    .numpad-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      border: 2px solid #e2e8f0;
+      background: white;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .numpad-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+      background: #f8fafc;
+    }
+
+    .numpad-btn:active {
+      transform: translateY(0);
+    }
+
+    .numpad-btn.submit-btn {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      color: white;
+      border-color: transparent;
+    }
+
+    .numpad-btn.submit-btn:hover {
+      background: linear-gradient(135deg, #059669, #10b981);
+    }
+
+    .numpad-btn.backspace-btn {
+      background: #fef3c7;
+      color: #92400e;
+      border-color: transparent;
+    }
+
+    .numpad-btn.backspace-btn:hover {
+      background: #fde68a;
+    }
+
+    /* ---- Buttons ---- */
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-again {
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      margin-top: 1.5rem;
+    }
+
+    /* ---- Feedback states ---- */
+    .feedback {
+      display: none;
+      margin-top: 1rem;
+    }
+
+    .feedback.visible {
+      display: block;
+    }
+
+    .feedback-correct {
+      color: #059669;
+      font-size: 1.3rem;
+      font-weight: 700;
+      animation: popIn 0.35s ease;
+    }
+
+    .feedback-wrong {
+      animation: popIn 0.35s ease;
+    }
+
+    .feedback-wrong .wrong-label {
+      color: #dc2626;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .feedback-wrong .explanation {
+      background: #fef3c7;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      font-size: 1.05rem;
+      color: #92400e;
+      line-height: 1.5;
+      margin-bottom: 0.5rem;
+    }
+
+    .final-score {
+      font-size: 1.1rem;
+      color: #64748b;
+      margin-top: 0.75rem;
+    }
+
+    .btn-next {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      margin-top: 1rem;
+    }
+
+    @keyframes popIn {
+      0%   { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ---- Celebration burst ---- */
+    .celebration {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      opacity: 0;
+    }
+
+    @keyframes confettiFall {
+      0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(120px) rotate(360deg); }
+    }
+
+    .game-wrapper {
+      position: relative;
+    }
+
+    /* Help button */
+    .help-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #7c3aed;
+      color: white;
+      border: none;
+      font-size: 1.25rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s, box-shadow 0.15s;
+      margin-left: auto;
+    }
+
+    .help-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Help dialog overlay */
+    .help-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      padding: 1rem;
+    }
+
+    .help-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .help-dialog {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      max-width: 400px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      transform: scale(0.9);
+      transition: transform 0.2s;
+    }
+
+    .help-overlay.visible .help-dialog {
+      transform: scale(1);
+    }
+
+    .help-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .help-section {
+      margin-bottom: 1rem;
+    }
+
+    .help-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+
+    .help-section p,
+    .help-section li {
+      font-size: 0.95rem;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    .help-section ul {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    .help-section li {
+      margin-bottom: 0.25rem;
+    }
+
+    .help-close-btn {
+      display: block;
+      width: 100%;
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: transform 0.15s;
+    }
+
+    .help-close-btn:hover {
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mr. Matt Math Club</h1>
+  </header>
+
+  <main>
+    <div class="back-row">
+      <a href="../index.html" class="back-btn" aria-label="Back to Activities"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10H5M5 10l5-5M5 10l5 5"/></svg></a>
+      <button class="help-btn" id="help-btn" aria-label="Help">?</button>
+    </div>
+
+    <!-- Help Dialog -->
+    <div class="help-overlay" id="help-overlay">
+      <div class="help-dialog">
+        <div class="help-title">How to Play Factor Facts</div>
+
+        <div class="help-section">
+          <h3>1. Multiply!</h3>
+          <p>Two numbers are multiplied together to make a bigger number. For example, 3 &times; 4 = 12.</p>
+        </div>
+
+        <div class="help-section">
+          <h3>2. Find the Missing Number</h3>
+          <p>One of the three circles will be empty. Use the number pad to type the missing number, then press the green checkmark to submit.</p>
+        </div>
+
+        <div class="help-section">
+          <h3>3. Scoring</h3>
+          <p>Each correct answer earns points. Later rounds use bigger numbers and are worth more points!</p>
+        </div>
+
+        <div class="help-section">
+          <h3>4. One Mistake and You're Out!</h3>
+          <p>A wrong answer ends the game. Try to beat your high score!</p>
+        </div>
+
+        <div class="help-section">
+          <h3>5. Tips</h3>
+          <p>If the big number and one factor are shown, try dividing to find the missing factor. You can also use the keyboard to type numbers and press Enter to submit.</p>
+        </div>
+
+        <button class="help-close-btn" id="help-close-btn">Got it!</button>
+      </div>
+    </div>
+
+    <div class="game-wrapper">
+      <div class="game-card" id="game-card">
+        <h2 class="activity-title">Factor Facts</h2>
+        <div class="score-bar">
+          <div class="score-item"><span class="score-label">Round</span><span class="round-value" id="round">1</span></div>
+          <div class="score-item"><span class="score-label">Best</span><span class="high-score-value" id="high-score">0</span></div>
+          <div class="score-item"><span class="score-label">Score</span><span class="score-value" id="score">0</span></div>
+        </div>
+
+        <div id="game-area">
+          <div class="bond-row">
+            <div class="bond-diagram" id="bond-diagram">
+              <svg class="bond-lines" viewBox="0 0 240 180">
+                <line class="bond-line" id="line-a" x1="70" y1="35" x2="195" y2="90"></line>
+                <line class="bond-line" id="line-b" x1="70" y1="145" x2="195" y2="90"></line>
+              </svg>
+              <span class="multiply-symbol">&times;</span>
+              <div class="bond-circle circle-factor circle-factor-a" id="circle-a"></div>
+              <div class="bond-circle circle-factor circle-factor-b" id="circle-b"></div>
+              <div class="bond-circle circle-product" id="circle-product"></div>
+            </div>
+
+            <div class="numpad" id="numpad">
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('1')">1</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('2')">2</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('3')">3</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('4')">4</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('5')">5</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('6')">6</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('7')">7</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('8')">8</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('9')">9</button>
+              <button class="numpad-btn backspace-btn" onclick="event.stopPropagation(); doBackspace()" aria-label="Backspace">&larr;</button>
+              <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('0')">0</button>
+              <button class="numpad-btn submit-btn" onclick="event.stopPropagation(); submitAnswer()" aria-label="Submit">&check;</button>
+            </div>
+          </div>
+
+          <div class="feedback" id="feedback-correct">
+            <p class="feedback-correct" id="correct-msg"></p>
+            <button class="btn btn-next" onclick="event.stopPropagation(); goNextRound()">Next Round</button>
+          </div>
+
+          <div class="feedback feedback-wrong" id="feedback-wrong">
+            <p class="wrong-label" id="wrong-label"></p>
+            <div class="explanation" id="explanation"></div>
+            <p class="final-score" id="final-score"></p>
+            <button class="btn btn-again" onclick="event.stopPropagation(); resetGame()">Play Again</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="celebration" id="celebration"></div>
+    </div>
+  </main>
+
+<script>
+  // ===== State =====
+  var score = 0;
+  var round = 1;
+  var awaitingNext = false;
+  var gameOver = false;
+  var highScore = parseInt(localStorage.getItem("factorFacts_highScore")) || 0;
+
+  var currentProduct = 0;
+  var currentFactorA = 0;
+  var currentFactorB = 0;
+  var missingCircle = ""; // "product", "factorA", or "factorB"
+  var correctAnswer = 0;
+  var typedValue = "";
+
+  var lastFactorA = -1;
+  var lastFactorB = -1;
+  var lastMissing = "";
+
+  // ===== DOM refs =====
+  var scoreEl = document.getElementById("score");
+  var roundEl = document.getElementById("round");
+  var highScoreEl = document.getElementById("high-score");
+  var circleA = document.getElementById("circle-a");
+  var circleB = document.getElementById("circle-b");
+  var circleProduct = document.getElementById("circle-product");
+  var numpadEl = document.getElementById("numpad");
+  var feedbackCorrect = document.getElementById("feedback-correct");
+  var correctMsg = document.getElementById("correct-msg");
+  var feedbackWrong = document.getElementById("feedback-wrong");
+  var wrongLabel = document.getElementById("wrong-label");
+  var explanationEl = document.getElementById("explanation");
+  var finalScoreEl = document.getElementById("final-score");
+  var celebration = document.getElementById("celebration");
+
+  // ===== Difficulty =====
+  // Returns the pool of factors for the current tier
+  function getFactorPool() {
+    if (round <= 5)  return [2, 3, 4, 5];
+    if (round <= 10) return [2, 3, 4, 5, 6, 7, 8, 9];
+    if (round <= 15) return [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    if (round <= 25) return [3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    return [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+  }
+
+  function getPointValue() {
+    if (round <= 5)  return 1;
+    if (round <= 10) return 2;
+    if (round <= 15) return 3;
+    if (round <= 25) return 5;
+    return 10;
+  }
+
+  function pickMissing() {
+    // Early rounds: mostly hide the product (straight multiplication).
+    // Later rounds: mix in hiding a factor (requires division thinking).
+    var r = Math.random();
+    if (round <= 5) {
+      return "product";
+    }
+    if (round <= 10) {
+      // 70% product, 30% factor
+      if (r < 0.70) return "product";
+      if (r < 0.85) return "factorA";
+      return "factorB";
+    }
+    if (round <= 15) {
+      // 50% product, 50% factor
+      if (r < 0.50) return "product";
+      if (r < 0.75) return "factorA";
+      return "factorB";
+    }
+    // 40% product, 60% factor
+    if (r < 0.40) return "product";
+    if (r < 0.70) return "factorA";
+    return "factorB";
+  }
+
+  function pickFrom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function generateBond() {
+    var pool = getFactorPool();
+    var factorA, factorB, missing;
+    var tries = 0;
+    do {
+      factorA = pickFrom(pool);
+      factorB = pickFrom(pool);
+      missing = pickMissing();
+      tries++;
+    } while (
+      tries < 50 &&
+      (factorA === lastFactorA && factorB === lastFactorB && missing === lastMissing)
+    );
+
+    lastFactorA = factorA;
+    lastFactorB = factorB;
+    lastMissing = missing;
+
+    currentFactorA = factorA;
+    currentFactorB = factorB;
+    currentProduct = factorA * factorB;
+    missingCircle = missing;
+
+    if (missing === "product") correctAnswer = currentProduct;
+    else if (missing === "factorA") correctAnswer = factorA;
+    else correctAnswer = factorB;
+  }
+
+  // ===== Rendering =====
+  function renderDiagram() {
+    [circleA, circleB, circleProduct].forEach(function(c) {
+      c.classList.remove("blank", "has-value", "correct-highlight", "wrong-highlight");
+    });
+
+    circleProduct.textContent = missingCircle === "product" ? "" : currentProduct;
+    circleA.textContent = missingCircle === "factorA" ? "" : currentFactorA;
+    circleB.textContent = missingCircle === "factorB" ? "" : currentFactorB;
+
+    var blankEl = getBlankElement();
+    blankEl.classList.add("blank");
+  }
+
+  function getBlankElement() {
+    if (missingCircle === "product") return circleProduct;
+    if (missingCircle === "factorA") return circleA;
+    return circleB;
+  }
+
+  function updateBlankDisplay() {
+    var blankEl = getBlankElement();
+    blankEl.textContent = typedValue || "?";
+    blankEl.classList.toggle("has-value", typedValue.length > 0);
+  }
+
+  // ===== Input =====
+  function typeDigit(d) {
+    if (awaitingNext || gameOver) return;
+    if (typedValue.length >= 3) return;
+    typedValue += d;
+    updateBlankDisplay();
+  }
+
+  function doBackspace() {
+    if (awaitingNext || gameOver) return;
+    if (typedValue.length > 0) {
+      typedValue = typedValue.slice(0, -1);
+      updateBlankDisplay();
+    }
+  }
+
+  function submitAnswer() {
+    if (awaitingNext || gameOver) return;
+    if (typedValue.length === 0) return;
+
+    var entered = parseInt(typedValue, 10);
+    var blankEl = getBlankElement();
+
+    if (entered === correctAnswer) {
+      awaitingNext = true;
+      var pts = getPointValue();
+      score += pts;
+      scoreEl.textContent = "+" + pts;
+      scoreEl.classList.add("score-bump");
+      setTimeout(function() {
+        scoreEl.textContent = score;
+        scoreEl.classList.remove("score-bump");
+      }, 1200);
+
+      blankEl.classList.remove("blank");
+      blankEl.classList.add("correct-highlight");
+      blankEl.textContent = correctAnswer;
+
+      numpadEl.style.visibility = "hidden";
+      correctMsg.textContent = currentFactorA + " \u00D7 " + currentFactorB + " = " + currentProduct;
+      feedbackCorrect.classList.add("visible");
+      showConfetti();
+    } else {
+      gameOver = true;
+      awaitingNext = true;
+
+      blankEl.classList.remove("blank");
+      blankEl.classList.add("wrong-highlight");
+
+      numpadEl.style.visibility = "hidden";
+      wrongLabel.textContent = "Not quite!";
+      explanationEl.textContent = currentFactorA + " \u00D7 " + currentFactorB + " = " + currentProduct;
+
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("factorFacts_highScore", highScore);
+        highScoreEl.textContent = highScore;
+        finalScoreEl.textContent = "New best: " + score + " point" + (score !== 1 ? "s" : "") + "!";
+      } else {
+        finalScoreEl.textContent = "You scored " + score + " point" + (score !== 1 ? "s" : "") + "!";
+      }
+      feedbackWrong.classList.add("visible");
+    }
+  }
+
+  // ===== Keyboard input =====
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape" && helpOverlayEl.classList.contains("visible")) {
+      hideHelp();
+      return;
+    }
+    if (awaitingNext && !gameOver && (e.key === " " || e.key === "Enter")) {
+      goNextRound();
+      return;
+    }
+    if (e.key >= "0" && e.key <= "9") {
+      typeDigit(e.key);
+    } else if (e.key === "Backspace") {
+      doBackspace();
+    } else if (e.key === "Enter") {
+      submitAnswer();
+    }
+  });
+
+  // ===== Round management =====
+  function nextRound() {
+    typedValue = "";
+    awaitingNext = false;
+    generateBond();
+    renderDiagram();
+    updateBlankDisplay();
+    roundEl.textContent = round;
+    scoreEl.textContent = score;
+    numpadEl.style.visibility = "visible";
+    feedbackCorrect.classList.remove("visible");
+    feedbackWrong.classList.remove("visible");
+  }
+
+  function goNextRound() {
+    if (!awaitingNext || gameOver) return;
+    round++;
+    nextRound();
+  }
+
+  function resetGame() {
+    score = 0;
+    round = 1;
+    gameOver = false;
+    nextRound();
+  }
+
+  // ===== Confetti =====
+  function showConfetti() {
+    celebration.innerHTML = "";
+    var colors = ["#7c3aed", "#4c6ef5", "#10b981", "#f59e0b", "#ec4899", "#34d399"];
+    for (var i = 0; i < 20; i++) {
+      var dot = document.createElement("div");
+      dot.className = "confetti";
+      dot.style.left = Math.random() * 100 + "%";
+      dot.style.top = Math.random() * 40 + "%";
+      dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+      dot.style.animation = "confettiFall 0.8s " + (Math.random() * 0.3) + "s ease-out forwards";
+      celebration.appendChild(dot);
+    }
+  }
+
+  // ===== Help dialog =====
+  var helpOverlayEl = document.getElementById("help-overlay");
+  var helpBtnEl = document.getElementById("help-btn");
+  var helpCloseBtnEl = document.getElementById("help-close-btn");
+
+  function showHelp() {
+    helpOverlayEl.classList.add("visible");
+  }
+
+  function hideHelp() {
+    helpOverlayEl.classList.remove("visible");
+    localStorage.setItem("factorFacts_helpSeen", "true");
+  }
+
+  helpBtnEl.addEventListener("click", showHelp);
+  helpCloseBtnEl.addEventListener("click", hideHelp);
+  helpOverlayEl.addEventListener("click", function(e) {
+    if (e.target === helpOverlayEl) {
+      hideHelp();
+    }
+  });
+
+  // ===== Start =====
+  highScoreEl.textContent = highScore;
+  nextRound();
+
+  if (!localStorage.getItem("factorFacts_helpSeen")) {
+    showHelp();
+  }
+</script>
+</body>
+</html>
