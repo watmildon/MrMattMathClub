@@ -102,6 +102,7 @@ main {
 .card.sequences        { border-top: 4px solid #14b8a6; }
 .card.food-truck       { border-top: 4px solid #d97706; }
 .card.sudoku           { border-top: 4px solid #6366f1; }
+.card.number-pyramid   { border-top: 4px solid #e11d48; }
 
 /* ---- Activity Page Layout ---- */
 

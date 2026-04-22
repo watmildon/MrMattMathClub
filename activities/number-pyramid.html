@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Number Pyramid - Mr. Matt Math Club</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237c3aed'/><text x='50' y='76' font-size='80' font-weight='bold' text-anchor='middle' fill='white'>M</text></svg>">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    .game-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem 1.5rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* Difficulty selector */
+    .difficulty-bar {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .diff-btn {
+      padding: 0.5rem 1.25rem;
+      border-radius: 20px;
+      border: 2px solid #e2e8f0;
+      background: white;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .diff-btn:hover {
+      border-color: #7c3aed;
+      color: #7c3aed;
+    }
+
+    .diff-btn.active {
+      background: #7c3aed;
+      color: white;
+      border-color: #7c3aed;
+    }
+
+    /* Pyramid grid */
+    .pyramid {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 1.5rem;
+      user-select: none;
+    }
+
+    .pyramid-row {
+      display: flex;
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .cell {
+      width: 48px;
+      height: 42px;
+      border: 2px solid #cbd5e1;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #1e293b;
+      cursor: default;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      background: white;
+    }
+
+    .cell.clue {
+      background: #f1f0ff;
+      color: #4c1d95;
+      font-weight: 700;
+      border-color: #c4b5fd;
+      cursor: default;
+    }
+
+    .cell.blank {
+      border-style: dashed;
+      border-color: #94a3b8;
+      cursor: pointer;
+      color: #7c3aed;
+    }
+
+    .cell.blank:hover {
+      border-color: #7c3aed;
+      background: #faf5ff;
+    }
+
+    .cell.selected {
+      border-color: #7c3aed;
+      border-style: solid;
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25);
+      background: #faf5ff;
+      transform: scale(1.05);
+    }
+
+    .cell.correct {
+      background: #d1fae5;
+      border-color: #10b981;
+      color: #065f46;
+      border-style: solid;
+    }
+
+    .cell.incorrect {
+      background: #fee2e2;
+      border-color: #ef4444;
+      color: #991b1b;
+      border-style: solid;
+    }
+
+    /* Numpad */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      width: 144px;
+    }
+
+    .numpad-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      border: 2px solid #e2e8f0;
+      background: white;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .numpad-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+      background: #f8fafc;
+    }
+
+    .numpad-btn:active {
+      transform: translateY(0);
+    }
+
+    .numpad-btn.backspace-btn {
+      background: #fef3c7;
+      color: #92400e;
+      border-color: transparent;
+    }
+
+    .numpad-btn.backspace-btn:hover {
+      background: #fde68a;
+    }
+
+    .action-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .check-btn, .new-btn {
+      padding: 0.6rem 1.5rem;
+      border-radius: 12px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .check-btn {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      color: white;
+    }
+
+    .check-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .new-btn {
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      color: white;
+    }
+
+    .new-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Feedback message */
+    .feedback {
+      margin-top: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      min-height: 1.5em;
+    }
+
+    .feedback.success {
+      color: #10b981;
+    }
+
+    .feedback.error {
+      color: #ef4444;
+    }
+
+    /* Celebration */
+    .game-wrapper {
+      position: relative;
+    }
+
+    .celebration {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      opacity: 0;
+    }
+
+    @keyframes confettiFall {
+      0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(120px) rotate(360deg); }
+    }
+
+    /* Help button */
+    .help-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #7c3aed;
+      color: white;
+      border: none;
+      font-size: 1.25rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s, box-shadow 0.15s;
+      margin-left: auto;
+    }
+
+    .help-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Help dialog overlay */
+    .help-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      padding: 1rem;
+    }
+
+    .help-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .help-dialog {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      max-width: 400px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      transform: scale(0.9);
+      transition: transform 0.2s;
+    }
+
+    .help-overlay.visible .help-dialog {
+      transform: scale(1);
+    }
+
+    .help-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .help-section {
+      margin-bottom: 1rem;
+    }
+
+    .help-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+
+    .help-section p,
+    .help-section li {
+      font-size: 0.95rem;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    .help-section ul {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    .help-section li {
+      margin-bottom: 0.25rem;
+    }
+
+    .help-close-btn {
+      display: block;
+      width: 100%;
+      background: linear-gradient(135deg, #7c3aed, #4c6ef5);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: transform 0.15s;
+    }
+
+    .help-close-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .cell {
+        width: 36px;
+        height: 32px;
+        font-size: 0.75rem;
+      }
+      .pyramid {
+        gap: 3px;
+      }
+      .pyramid-row {
+        gap: 3px;
+      }
+      .game-card {
+        padding: 1.5rem 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header><h1>Mr. Matt Math Club</h1></header>
+  <main>
+    <div class="back-row">
+      <a href="../index.html" class="back-btn" aria-label="Back to Activities">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      </a>
+      <button class="help-btn" id="help-btn" aria-label="Help">?</button>
+    </div>
+
+    <div class="help-overlay" id="help-overlay">
+      <div class="help-dialog">
+        <div class="help-title">How to Play Number Pyramid</div>
+        <div class="help-section">
+          <h3>1. The Rule</h3>
+          <p>Each cell equals the sum of the two cells directly below it.</p>
+        </div>
+        <div class="help-section">
+          <h3>2. Fill in the Blanks</h3>
+          <p>Click a blank cell to select it, then type a number using the numpad or your keyboard.</p>
+        </div>
+        <div class="help-section">
+          <h3>3. Check Your Work</h3>
+          <p>Press the <strong>Check</strong> button to see which cells are correct (green) or incorrect (red).</p>
+        </div>
+        <div class="help-section">
+          <h3>4. Difficulty</h3>
+          <p>Choose Easy, Medium, or Hard to change the pyramid size and number range.</p>
+        </div>
+        <div class="help-section">
+          <h3>5. New Puzzle</h3>
+          <p>Press <strong>New Puzzle</strong> any time to get a fresh pyramid at the current difficulty.</p>
+        </div>
+        <button class="help-close-btn" id="help-close-btn">Got it!</button>
+      </div>
+    </div>
+
+    <div class="game-wrapper">
+      <div class="game-card">
+        <div class="difficulty-bar">
+          <button class="diff-btn active" data-diff="easy">Easy</button>
+          <button class="diff-btn" data-diff="medium">Medium</button>
+          <button class="diff-btn" data-diff="hard">Hard</button>
+        </div>
+
+        <div class="pyramid" id="pyramid"></div>
+
+        <div class="controls">
+          <div class="numpad" id="numpad">
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('1')">1</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('2')">2</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('3')">3</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('4')">4</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('5')">5</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('6')">6</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('7')">7</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('8')">8</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('9')">9</button>
+            <button class="numpad-btn backspace-btn" onclick="event.stopPropagation(); doBackspace()" aria-label="Backspace">&larr;</button>
+            <button class="numpad-btn" onclick="event.stopPropagation(); typeDigit('0')">0</button>
+            <button class="numpad-btn backspace-btn" onclick="event.stopPropagation(); clearCell()" aria-label="Clear">C</button>
+          </div>
+          <div class="action-btns">
+            <button class="check-btn" onclick="checkAnswers()">Check</button>
+            <button class="new-btn" onclick="newPuzzle()">New Puzzle</button>
+          </div>
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+      </div>
+      <div class="celebration" id="celebration"></div>
+    </div>
+  </main>
+
+<script>
+  // ===== Config =====
+  var DIFFICULTIES = {
+    easy:   { rows: 5,  minVal: 1, maxVal: 9,  clueRatio: 0.5 },
+    medium: { rows: 7,  minVal: 1, maxVal: 12, clueRatio: 0.35 },
+    hard:   { rows: 10, minVal: 1, maxVal: 15, clueRatio: 0.25 }
+  };
+
+  var currentDifficulty = "easy";
+  var solution = [];     // solution[row][col] — row 0 is top
+  var isClue = [];       // isClue[row][col] — true if given
+  var playerValues = []; // playerValues[row][col] — string typed by player
+  var selectedRow = -1;
+  var selectedCol = -1;
+  var puzzleSolved = false;
+
+  var pyramidEl = document.getElementById("pyramid");
+  var feedbackEl = document.getElementById("feedback");
+  var celebrationEl = document.getElementById("celebration");
+
+  // ===== Puzzle generation =====
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function generateSolution(numRows, minVal, maxVal) {
+    var grid = [];
+    // Build bottom row
+    var bottomRow = [];
+    for (var i = 0; i < numRows; i++) {
+      bottomRow.push(randInt(minVal, maxVal));
+    }
+    // Build from bottom up: grid[0] = top, grid[numRows-1] = bottom
+    grid[numRows - 1] = bottomRow;
+    for (var r = numRows - 2; r >= 0; r--) {
+      grid[r] = [];
+      for (var c = 0; c <= r; c++) {
+        grid[r][c] = grid[r + 1][c] + grid[r + 1][c + 1];
+      }
+    }
+    return grid;
+  }
+
+  function isSolvable(grid, clues) {
+    // Simulate solving: known[r][c] = true if we can deduce value
+    var numRows = grid.length;
+    var known = [];
+    for (var r = 0; r < numRows; r++) {
+      known[r] = [];
+      for (var c = 0; c <= r; c++) {
+        known[r][c] = clues[r][c];
+      }
+    }
+
+    var changed = true;
+    while (changed) {
+      changed = false;
+      for (var r = 0; r < numRows; r++) {
+        for (var c = 0; c <= r; c++) {
+          if (known[r][c]) continue;
+          // Can deduce from two children: parent = left + right
+          if (r < numRows - 1 && known[r + 1][c] && known[r + 1][c + 1]) {
+            known[r][c] = true;
+            changed = true;
+            continue;
+          }
+          // Can deduce from parent and sibling
+          if (r > 0) {
+            // This cell is child at position c in row r
+            // Parent is at row r-1
+            // If c > 0: parent at [r-1][c-1], sibling at [r][c-1]
+            if (c > 0 && known[r - 1][c - 1] && known[r][c - 1]) {
+              known[r][c] = true;
+              changed = true;
+              continue;
+            }
+            // If c < r: parent at [r-1][c], sibling at [r][c+1]
+            if (c < r && known[r - 1][c] && known[r][c + 1]) {
+              known[r][c] = true;
+              changed = true;
+              continue;
+            }
+          }
+        }
+      }
+    }
+
+    // Check all cells are known
+    for (var r = 0; r < numRows; r++) {
+      for (var c = 0; c <= r; c++) {
+        if (!known[r][c]) return false;
+      }
+    }
+    return true;
+  }
+
+  function selectClues(grid, clueRatio) {
+    var numRows = grid.length;
+    var totalCells = numRows * (numRows + 1) / 2;
+    var numClues = Math.round(totalCells * clueRatio);
+
+    // Gather all cell positions
+    var allCells = [];
+    for (var r = 0; r < numRows; r++) {
+      for (var c = 0; c <= r; c++) {
+        allCells.push([r, c]);
+      }
+    }
+
+    // Try up to 100 times to find a solvable clue set
+    for (var attempt = 0; attempt < 100; attempt++) {
+      // Shuffle and pick numClues
+      var shuffled = allCells.slice();
+      for (var i = shuffled.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = tmp;
+      }
+
+      var clues = [];
+      for (var r = 0; r < numRows; r++) {
+        clues[r] = [];
+        for (var c = 0; c <= r; c++) {
+          clues[r][c] = false;
+        }
+      }
+
+      for (var i = 0; i < numClues && i < shuffled.length; i++) {
+        clues[shuffled[i][0]][shuffled[i][1]] = true;
+      }
+
+      if (isSolvable(grid, clues)) {
+        return clues;
+      }
+    }
+
+    // Fallback: reveal the entire bottom row plus scattered clues
+    var clues = [];
+    for (var r = 0; r < numRows; r++) {
+      clues[r] = [];
+      for (var c = 0; c <= r; c++) {
+        clues[r][c] = (r === numRows - 1);
+      }
+    }
+    return clues;
+  }
+
+  function generatePuzzle() {
+    var cfg = DIFFICULTIES[currentDifficulty];
+    solution = generateSolution(cfg.rows, cfg.minVal, cfg.maxVal);
+    isClue = selectClues(solution, cfg.clueRatio);
+
+    playerValues = [];
+    for (var r = 0; r < cfg.rows; r++) {
+      playerValues[r] = [];
+      for (var c = 0; c <= r; c++) {
+        playerValues[r][c] = isClue[r][c] ? String(solution[r][c]) : "";
+      }
+    }
+
+    selectedRow = -1;
+    selectedCol = -1;
+    puzzleSolved = false;
+    feedbackEl.textContent = "";
+    feedbackEl.className = "feedback";
+    celebrationEl.innerHTML = "";
+  }
+
+  // ===== Rendering =====
+  function renderPyramid() {
+    pyramidEl.innerHTML = "";
+    var numRows = solution.length;
+
+    for (var r = 0; r < numRows; r++) {
+      var rowDiv = document.createElement("div");
+      rowDiv.className = "pyramid-row";
+
+      for (var c = 0; c <= r; c++) {
+        var cell = document.createElement("div");
+        cell.className = "cell";
+        cell.setAttribute("data-row", r);
+        cell.setAttribute("data-col", c);
+
+        if (isClue[r][c]) {
+          cell.classList.add("clue");
+          cell.textContent = solution[r][c];
+        } else {
+          cell.classList.add("blank");
+          cell.textContent = playerValues[r][c] || "";
+          if (r === selectedRow && c === selectedCol) {
+            cell.classList.add("selected");
+          }
+        }
+
+        (function(row, col) {
+          cell.addEventListener("click", function(e) {
+            e.stopPropagation();
+            if (puzzleSolved) return;
+            if (!isClue[row][col]) {
+              selectCell(row, col);
+            }
+          });
+        })(r, c);
+
+        rowDiv.appendChild(cell);
+      }
+
+      pyramidEl.appendChild(rowDiv);
+    }
+  }
+
+  function selectCell(r, c) {
+    // Clear old feedback styles when selecting a new cell
+    clearFeedbackStyles();
+    feedbackEl.textContent = "";
+    feedbackEl.className = "feedback";
+
+    selectedRow = r;
+    selectedCol = c;
+    renderPyramid();
+  }
+
+  function clearFeedbackStyles() {
+    var cells = pyramidEl.querySelectorAll(".cell");
+    for (var i = 0; i < cells.length; i++) {
+      cells[i].classList.remove("correct", "incorrect");
+    }
+  }
+
+  // ===== Input =====
+  function typeDigit(d) {
+    if (puzzleSolved) return;
+    if (selectedRow < 0 || selectedCol < 0) return;
+    var current = playerValues[selectedRow][selectedCol];
+    // Cap at 6 digits (top of a 10-row pyramid can be ~1000+)
+    if (current.length >= 6) return;
+    playerValues[selectedRow][selectedCol] = current + d;
+    renderPyramid();
+  }
+
+  function doBackspace() {
+    if (puzzleSolved) return;
+    if (selectedRow < 0 || selectedCol < 0) return;
+    var current = playerValues[selectedRow][selectedCol];
+    if (current.length > 0) {
+      playerValues[selectedRow][selectedCol] = current.slice(0, -1);
+      renderPyramid();
+    }
+  }
+
+  function clearCell() {
+    if (puzzleSolved) return;
+    if (selectedRow < 0 || selectedCol < 0) return;
+    playerValues[selectedRow][selectedCol] = "";
+    renderPyramid();
+  }
+
+  // ===== Navigation =====
+  function findBlankCells() {
+    var blanks = [];
+    for (var r = 0; r < solution.length; r++) {
+      for (var c = 0; c <= r; c++) {
+        if (!isClue[r][c]) {
+          blanks.push([r, c]);
+        }
+      }
+    }
+    return blanks;
+  }
+
+  function navigateBlank(direction) {
+    var blanks = findBlankCells();
+    if (blanks.length === 0) return;
+
+    if (selectedRow < 0 || selectedCol < 0) {
+      selectCell(blanks[0][0], blanks[0][1]);
+      return;
+    }
+
+    var currentIdx = -1;
+    for (var i = 0; i < blanks.length; i++) {
+      if (blanks[i][0] === selectedRow && blanks[i][1] === selectedCol) {
+        currentIdx = i;
+        break;
+      }
+    }
+
+    if (currentIdx < 0) {
+      selectCell(blanks[0][0], blanks[0][1]);
+      return;
+    }
+
+    if (direction === "next") {
+      var nextIdx = (currentIdx + 1) % blanks.length;
+      selectCell(blanks[nextIdx][0], blanks[nextIdx][1]);
+    } else if (direction === "prev") {
+      var prevIdx = (currentIdx - 1 + blanks.length) % blanks.length;
+      selectCell(blanks[prevIdx][0], blanks[prevIdx][1]);
+    }
+  }
+
+  // ===== Validation =====
+  function checkAnswers() {
+    if (puzzleSolved) return;
+
+    var allFilled = true;
+    var allCorrect = true;
+    var numRows = solution.length;
+
+    for (var r = 0; r < numRows; r++) {
+      for (var c = 0; c <= r; c++) {
+        if (isClue[r][c]) continue;
+
+        var cellEl = pyramidEl.querySelector('[data-row="' + r + '"][data-col="' + c + '"]');
+        if (!cellEl) continue;
+
+        var val = playerValues[r][c];
+        if (val === "") {
+          allFilled = false;
+          continue;
+        }
+
+        var num = parseInt(val, 10);
+        if (num === solution[r][c]) {
+          cellEl.classList.add("correct");
+          cellEl.classList.remove("incorrect");
+        } else {
+          cellEl.classList.add("incorrect");
+          cellEl.classList.remove("correct");
+          allCorrect = false;
+        }
+      }
+    }
+
+    if (!allFilled) {
+      feedbackEl.textContent = "Fill in all the blanks first!";
+      feedbackEl.className = "feedback error";
+    } else if (allCorrect) {
+      puzzleSolved = true;
+      feedbackEl.textContent = "You solved it!";
+      feedbackEl.className = "feedback success";
+      selectedRow = -1;
+      selectedCol = -1;
+      showConfetti();
+    } else {
+      feedbackEl.textContent = "Some answers are incorrect. Keep trying!";
+      feedbackEl.className = "feedback error";
+    }
+  }
+
+  // ===== Confetti =====
+  function showConfetti() {
+    celebrationEl.innerHTML = "";
+    var colors = ["#7c3aed", "#4c6ef5", "#10b981", "#f59e0b", "#ec4899", "#34d399"];
+    for (var i = 0; i < 30; i++) {
+      var dot = document.createElement("div");
+      dot.className = "confetti";
+      dot.style.left = Math.random() * 100 + "%";
+      dot.style.top = Math.random() * 40 + "%";
+      dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+      dot.style.animation = "confettiFall 0.8s " + (Math.random() * 0.3) + "s ease-out forwards";
+      celebrationEl.appendChild(dot);
+    }
+  }
+
+  // ===== New puzzle =====
+  function newPuzzle() {
+    generatePuzzle();
+    renderPyramid();
+  }
+
+  // ===== Difficulty switching =====
+  var diffBtns = document.querySelectorAll(".diff-btn");
+  for (var i = 0; i < diffBtns.length; i++) {
+    (function(btn) {
+      btn.addEventListener("click", function() {
+        for (var j = 0; j < diffBtns.length; j++) {
+          diffBtns[j].classList.remove("active");
+        }
+        btn.classList.add("active");
+        currentDifficulty = btn.getAttribute("data-diff");
+        newPuzzle();
+      });
+    })(diffBtns[i]);
+  }
+
+  // ===== Keyboard input =====
+  document.addEventListener("keydown", function(e) {
+    if (document.getElementById("help-overlay").classList.contains("visible")) {
+      if (e.key === "Escape") hideHelp();
+      return;
+    }
+
+    if (puzzleSolved) return;
+
+    if (e.key >= "0" && e.key <= "9") {
+      typeDigit(e.key);
+      e.preventDefault();
+    } else if (e.key === "Backspace") {
+      doBackspace();
+      e.preventDefault();
+    } else if (e.key === "Delete") {
+      clearCell();
+      e.preventDefault();
+    } else if (e.key === "Enter") {
+      checkAnswers();
+      e.preventDefault();
+    } else if (e.key === "Tab") {
+      e.preventDefault();
+      navigateBlank(e.shiftKey ? "prev" : "next");
+    } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      navigateBlank("next");
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      navigateBlank("prev");
+    }
+  });
+
+  // Click outside pyramid deselects
+  document.addEventListener("click", function() {
+    if (selectedRow >= 0) {
+      selectedRow = -1;
+      selectedCol = -1;
+      renderPyramid();
+    }
+  });
+
+  // ===== Help dialog =====
+  var helpOverlayEl = document.getElementById("help-overlay");
+
+  document.getElementById("help-btn").addEventListener("click", function() {
+    helpOverlayEl.classList.add("visible");
+  });
+
+  function hideHelp() {
+    helpOverlayEl.classList.remove("visible");
+    localStorage.setItem("numberPyramid_helpSeen", "true");
+  }
+
+  document.getElementById("help-close-btn").addEventListener("click", hideHelp);
+
+  helpOverlayEl.addEventListener("click", function(e) {
+    if (e.target === helpOverlayEl) hideHelp();
+  });
+
+  // Auto-show on first visit
+  if (!localStorage.getItem("numberPyramid_helpSeen")) {
+    helpOverlayEl.classList.add("visible");
+  }
+
+  // ===== Init =====
+  generatePuzzle();
+  renderPyramid();
+</script>
+</body>
+</html>
